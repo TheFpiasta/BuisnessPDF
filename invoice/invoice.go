@@ -5,7 +5,6 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"io"
-	"time"
 )
 
 type Invoice struct {
@@ -23,13 +22,12 @@ type invoicePdfData struct {
 	InvoiceBody     invoiceBody `json:"InvoiceBody"`
 }
 
-type invoiceBody struct {
-	OpeningText     string          `json:"openingText"`
-	ServiceTimeText string          `json:"serviceTimeText"`
-	HeadlineText    string          `json:"headlineText"`
-	ClosingText     string          `json:"closingText"`
-	UstNotice       string          `json:"ustNotice"`
-	InvoicedItems   []invoicedItems `json:"invoicedItems"`
+type addressInfo struct {
+	FullForename string  `json:"fullForename"`
+	FullSurname  string  `json:"fullSurname"`
+	CompanyName  string  `json:"companyName"`
+	Supplement   string  `json:"supplement"`
+	Address      address `json:"address"`
 }
 
 type address struct {
@@ -40,13 +38,6 @@ type address struct {
 	CityName         string `json:"cityName"`
 	Country          string `json:"country"`
 	CountryCode      string `json:"countryCode"`
-}
-
-type addressInfo struct {
-	FullForename string  `json:"fullForename"`
-	FullSurname  string  `json:"fullSurname"`
-	NameSecond   string  `json:"nameSecond"`
-	Address      address `json:"address"`
 }
 
 type senderInfo struct {
@@ -60,9 +51,18 @@ type senderInfo struct {
 }
 
 type invoiceMeta struct {
-	InvoiceNumber  string    `json:"invoiceNumber"`
-	InvoiceDate    time.Time `json:"invoiceDate"`
-	CustomerNumber string    `json:"customerNumber"`
+	InvoiceNumber  string `json:"invoiceNumber"`
+	InvoiceDate    string `json:"invoiceDate"`
+	CustomerNumber string `json:"customerNumber"`
+}
+
+type invoiceBody struct {
+	OpeningText     string          `json:"openingText"`
+	ServiceTimeText string          `json:"serviceTimeText"`
+	HeadlineText    string          `json:"headlineText"`
+	ClosingText     string          `json:"closingText"`
+	UstNotice       string          `json:"ustNotice"`
+	InvoicedItems   []invoicedItems `json:"invoicedItems"`
 }
 
 type invoicedItems struct {
