@@ -103,14 +103,32 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 	return nil
 }
 
-func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
+type color struct {
+	r uint8
+	g uint8
+	b uint8
+}
 
+func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
+	lineColor := color{200, 200, 200}
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
 	iv.newPDF()
-	iv.setPdfText(100, 100, "LOGO", "b", 16, 40, 10)
+	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	iv.drawPdfTextCell(25, 51, "FirmenName Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", 8, 60, 3)
 
-	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 100, 20)
+	iv.drawPdfTextCell(25, 58, "FirmenName Gmbh", "", 11, 60, 4)
+	iv.drawPdfTextCell(25, 63, "Frau Musterfrau", "", 11, 60, 4)
+	iv.drawPdfTextCell(25, 68, "Paulaner-Str. 99", "", 11, 60, 4)
+	iv.drawPdfTextCell(25, 73, "04109 Leipzig", "", 11, 60, 4)
+	iv.drawLine(25, 94, 186, 94, lineColor)
+	iv.drawPdfTextCell(25, 96, "Rechnung - 4", "b", 16, 60, 4)
+	iv.drawPdfTextRightAligned(185, 96, "Kundennummer: KD83383", "", 11, 60, 4)
+	iv.drawPdfTextRightAligned(185, 101, "Rechnungsnummer: RE20230002", "", 11, 60, 4)
+	iv.drawPdfTextRightAligned(185, 106, "Dateum: 23.04.2023", "", 11, 60, 4)
+	iv.drawLine(25, 111, 186, 111, lineColor)
+
+	iv.drawPdfTextCell(25, 117, "ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, 60, 4)
 
 	return iv.pdf, err
 }
