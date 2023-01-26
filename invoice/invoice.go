@@ -5,51 +5,78 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"io"
-	"time"
 )
 
 type Invoice struct {
-	pdfData  invoicePdf
+	pdfData  invoicePdfData
 	pdf      *gofpdf.Fpdf
 	logger   *zerolog.Logger
 	textFont string
 }
 
-type invoicePdf struct {
-	senderInfo      addressInfo
-	receiverInfo    addressInfo
-	invoiceMeta     invoiceMeta
-	logoURL         string
-	openingText     string
-	serviceTimeText string
-	headline        string
-	closingText     string
-	positions       []service
-}
-
-type address struct {
-	Addressee string `json:"addressee"`
-	ZipCode   string `json:"zipCode"`
-	CityName  string `json:"cityName"`
+type invoicePdfData struct {
+	SenderAddress   addressInfo `json:"senderAddress"`
+	ReceiverAddress addressInfo `json:"receiverAddress"`
+	SenderInfo      senderInfo  `json:"senderInfo"`
+	InvoiceMeta     invoiceMeta `json:"invoiceMeta"`
+	InvoiceBody     invoiceBody `json:"InvoiceBody"`
 }
 
 type addressInfo struct {
-	Name       string  `json:""`
-	NameSecond string  `json:""`
-	Address    address `json:""`
-	Phone      string  `json:""`
-	Email      string  `json:""`
+	FullForename string  `json:"fullForename"`
+	FullSurname  string  `json:"fullSurname"`
+	CompanyName  string  `json:"companyName"`
+	Supplement   string  `json:"supplement"`
+	Address      address `json:"address"`
+}
+
+type address struct {
+	Road             string `json:"road"`
+	HouseNumber      string `json:"houseNumber"`
+	StreetSupplement string `json:"streetSupplement"`
+	ZipCode          string `json:"zipCode"`
+	CityName         string `json:"cityName"`
+	Country          string `json:"country"`
+	CountryCode      string `json:"countryCode"`
+}
+
+type senderInfo struct {
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+	LogSvgo   string `json:"logoSvg"`
+	Iban      string `json:"iban"`
+	Bic       string `json:"bic"`
+	TaxNumber string `json:"taxNumber"`
+	BankName  string `json:"bankName"`
 }
 
 type invoiceMeta struct {
-	invoiceNumber  string
-	invoiceDate    time.Time
-	customerNumber string
+	InvoiceNumber  string `json:"invoiceNumber"`
+	InvoiceDate    string `json:"invoiceDate"`
+	CustomerNumber string `json:"customerNumber"`
 }
 
-type service struct {
-	position int
-	name     string
+type invoiceBody struct {
+	OpeningText     string          `json:"openingText"`
+	ServiceTimeText string          `json:"serviceTimeText"`
+	HeadlineText    string          `json:"headlineText"`
+	ClosingText     string          `json:"closingText"`
+	UstNotice       string          `json:"ustNotice"`
+	InvoicedItems   []invoicedItems `json:"invoicedItems"`
+}
+
+type invoicedItems struct {
+	PositionNumber    int     `json:"positionNumber"`
+	Quantity          float64 `json:"quantity"`
+	Unit              string  `json:"unit"`
+	Description       string  `json:"description"`
+	SinglePrice       float64 `json:"singlePrice"`
+	SinglePriceNet    float64 `json:"singlePriceNet"`
+	OverallPriceNet   float64 `json:"overallPriceNet"`
+	OverallPriceGross float64 `json:"overallPriceGross"`
+	OverallTaxes      float64 `json:"overallTaxes"`
+	TaxesPercentage   float64 `json:"taxesPercentage"`
+	Currency          string  `json:"currency"`
 }
 
 func New(logger *zerolog.Logger) (iv *Invoice) {
@@ -69,7 +96,7 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 
 	err = iv.validateJsonData()
 	if err != nil {
-		iv.pdfData = invoicePdf{}
+		iv.pdfData = invoicePdfData{}
 		return iv.handleError(err, "Incorrect data!")
 	}
 
