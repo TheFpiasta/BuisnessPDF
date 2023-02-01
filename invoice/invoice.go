@@ -8,10 +8,13 @@ import (
 )
 
 type Invoice struct {
-	pdfData  invoicePdfData
-	pdf      *gofpdf.Fpdf
-	logger   *zerolog.Logger
-	textFont string
+	pdfData       invoicePdfData
+	pdf           *gofpdf.Fpdf
+	logger        *zerolog.Logger
+	textFont      string
+	lineHeight    float64
+	textSize      float64
+	textSizeSmall float64
 }
 
 type invoicePdfData struct {
@@ -81,8 +84,11 @@ type invoicedItems struct {
 
 func New(logger *zerolog.Logger) (iv *Invoice) {
 	iv = &Invoice{
-		logger:   logger,
-		textFont: "Arial",
+		logger:        logger,
+		textFont:      "openSans",
+		lineHeight:    5,
+		textSize:      11,
+		textSizeSmall: 8,
 	}
 
 	return iv
@@ -110,27 +116,42 @@ type color struct {
 }
 
 func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
+
 	lineColor := color{200, 200, 200}
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
 	iv.newPDF()
-	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
-	iv.drawPdfTextCell(25, 51, "FirmenName Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", 8, 60, 3)
+	iv.writePdfText("TEST", "", iv.textSize, "L")
 
-	iv.drawPdfTextCell(25, 58, "FirmenName Gmbh", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 63, "Frau Musterfrau", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 68, "Paulaner-Str. 99", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 73, "04109 Leipzig", "", 11, 60, 4)
+	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+
+	iv.pdf.SetXY(25, 51)
+
+	iv.writePdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "R")
+
+	iv.writePdfText("Firmen Name Gmbh", "", iv.textSize, "L")
+	iv.writePdfText("Frau Musterfrau", "", iv.textSize, "L")
+	iv.writePdfText("Paulaner-Str. 99", "", iv.textSize, "L")
+	iv.writePdfText("04109 Leipzig", "", iv.textSize, "L")
+
 	iv.drawLine(25, 94, 186, 94, lineColor)
-	iv.drawPdfTextCell(25, 96, "Rechnung - 4", "b", 16, 60, 4)
-	iv.drawPdfTextRightAligned(185, 96, "Kundennummer: KD83383", "", 11, 60, 4)
-	iv.drawPdfTextRightAligned(185, 101, "Rechnungsnummer: RE20230002", "", 11, 60, 4)
-	iv.drawPdfTextRightAligned(185, 106, "Dateum: 23.04.2023", "", 11, 60, 4)
+
+	iv.pdf.SetXY(25, 96)
+	iv.writePdfText("Rechnung - 4", "b", 16, "L")
+
+	pageWith, _ := iv.pdf.GetPageSize()
+	iv.pdf.SetXY(185, pageWith)
+
+	iv.writePdfText("Kundennummer: KD83383", "", 11, "R")
+	iv.writePdfText("Rechnungsnummer: RE20230002", "", 11, "R")
+	iv.writePdfText("Dateum: 23.04.2023", "", 11, "R")
+
 	iv.drawLine(25, 111, 186, 111, lineColor)
 
-	iv.drawPdfTextCell(25, 117, "ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, 60, 4)
+	iv.pdf.SetXY(25, 117)
+	iv.writePdfText("ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, "L")
 
-	return iv.pdf, err
+	return iv.pdf, iv.pdf.Error()
 }
 
 func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
