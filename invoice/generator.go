@@ -1,6 +1,7 @@
 package invoice
 
 import (
+	"errors"
 	"github.com/jung-kurt/gofpdf"
 	"net/http"
 )
@@ -14,30 +15,62 @@ func (iv *Invoice) newPDF() {
 	iv.pdf.AddUTF8Font(iv.textFont, "b", "fonts/OpenSans-Bold.ttf")
 	iv.pdf.AddUTF8Font(iv.textFont, "m", "fonts/OpenSans-Medium.ttf")
 
-	iv.pdf.SetFont(iv.textFont, "", 12)
-	iv.pdf.SetMargins(25, 45, 20)
+	iv.pdf.SetFont(iv.textFont, "", iv.textSize)
+	iv.pdf.SetMargins(iv.marginLeft, iv.marginTop, iv.marginRight)
 	iv.pdf.SetHomeXY()
 	//iv.pdf.AliasNbPages("{entute}")
 
 	iv.pdf.AddPage()
 }
 
-// writePdfText
+// printPdfText
 //
 //	text		the text to write
 //	styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
 //	textSize	the text size
 //	alignStr	"L" right, "C" center, "R" right
-func (iv *Invoice) writePdfText(text string, styleStr string, textSize float64, alignStr string) {
-	//TODO refactor to cell!
+func (iv *Invoice) printPdfText(text string, styleStr string, textSize float64, alignStr string) {
 	iv.pdf.SetFont(iv.textFont, styleStr, textSize)
-	textWidthGlyf := iv.pdf.GetStringSymbolWidth(text)
+	pageWidth, _ := iv.pdf.GetPageSize()
+	saveWriteArea := pageWidth - iv.marginLeft - iv.pdf.GetX()
+	_, lineHeight := iv.pdf.GetFontSize()
 
-	textWidthGlyf = textWidthGlyf / 64
+	switch alignStr {
+	case "L":
+		iv.pdf.Cell(saveWriteArea/2, lineHeight, text)
+	case "R":
+		stringWidth := iv.pdf.GetStringWidth(text) + 2
+		x := iv.pdf.GetX()
+		y := iv.pdf.GetY()
 
-	iv.pdf.WriteAligned(float64(textWidthGlyf), iv.lineHeight, text, alignStr)
-	//iv.pdf.Cell(iv.pdf.GetStringWidth(text), elementHeight, text)
-	iv.pdf.Ln(iv.lineHeight)
+		iv.pdf.SetXY(x-stringWidth, y)
+		iv.pdf.Cell(stringWidth, lineHeight, text)
+		iv.pdf.SetXY(x-stringWidth, y)
+	case "C":
+	default:
+		iv.pdf.SetError(errors.New("can't interpret the given text align code"))
+	}
+}
+
+func (iv *Invoice) printLnPdfText(text string, styleStr string, textSize float64, alignStr string) {
+	currentX := iv.pdf.GetX()
+	iv.printPdfText(text, styleStr, textSize, alignStr)
+	iv.newLine(alignStr, currentX)
+}
+
+func (iv *Invoice) newLine(alignStr string, oldX float64) {
+	_, lineHeight := iv.pdf.GetFontSize()
+	currentY := iv.pdf.GetY() + lineHeight + iv.fontGapY
+
+	switch alignStr {
+	case "L":
+		iv.pdf.SetXY(oldX, currentY)
+	case "R":
+		iv.pdf.SetXY(oldX, currentY)
+	case "C":
+	default:
+		iv.pdf.SetError(errors.New("can't interpret the given text align code"))
+	}
 }
 
 func (iv *Invoice) drawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64) {
@@ -74,6 +107,6 @@ func (iv *Invoice) placeImgOnPosXY(logoUrl string, posX int, posY int) (err erro
 		pdf.Image(logoUrl, float64(posX), float64(posY), imgWd/2, imgHt/2, false, tp, 0, "")
 	}
 
-	return nil
+	return pdf.Error()
 
 }

@@ -15,6 +15,10 @@ type Invoice struct {
 	lineHeight    float64
 	textSize      float64
 	textSizeSmall float64
+	marginLeft    float64
+	marginRight   float64
+	marginTop     float64
+	fontGapY      float64
 }
 
 type invoicePdfData struct {
@@ -89,6 +93,10 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		lineHeight:    5,
 		textSize:      11,
 		textSizeSmall: 8,
+		marginLeft:    25,
+		marginRight:   20,
+		marginTop:     45,
+		fontGapY:      2,
 	}
 
 	return iv
@@ -118,38 +126,43 @@ type color struct {
 func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
 
 	lineColor := color{200, 200, 200}
+
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
 	iv.newPDF()
-	iv.writePdfText("TEST", "", iv.textSize, "L")
+	pageWidth, _ := iv.pdf.GetPageSize()
 
 	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
 
-	iv.pdf.SetXY(25, 51)
+	iv.pdf.SetXY(iv.marginLeft, 51)
+	iv.printPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "L")
 
-	iv.writePdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "R")
+	iv.pdf.SetXY(iv.marginLeft, 60)
+	iv.printLnPdfText("Firmen Name Gmbh", "", iv.textSize, "L")
+	iv.printLnPdfText("Frau Musterfrau", "", iv.textSize, "L")
+	iv.printLnPdfText("Paulaner-Str. 99", "", iv.textSize, "L")
+	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "L")
 
-	iv.writePdfText("Firmen Name Gmbh", "", iv.textSize, "L")
-	iv.writePdfText("Frau Musterfrau", "", iv.textSize, "L")
-	iv.writePdfText("Paulaner-Str. 99", "", iv.textSize, "L")
-	iv.writePdfText("04109 Leipzig", "", iv.textSize, "L")
+	iv.drawLine(iv.marginLeft, 94, pageWidth-iv.marginRight-iv.marginLeft, 94, lineColor)
 
-	iv.drawLine(25, 94, 186, 94, lineColor)
+	iv.pdf.SetXY(iv.marginLeft, 96)
+	iv.printPdfText("Rechnung - 4", "b", 16, "L")
 
-	iv.pdf.SetXY(25, 96)
-	iv.writePdfText("Rechnung - 4", "b", 16, "L")
+	iv.pdf.SetXY(iv.marginLeft+100, 60)
+	iv.printLnPdfText("Kundennummer:", "", 11, "L")
+	iv.printLnPdfText("Rechnungsnummer:", "", 11, "L")
+	iv.printLnPdfText("Datum:", "", 11, "L")
 
-	pageWith, _ := iv.pdf.GetPageSize()
-	iv.pdf.SetXY(185, pageWith)
+	iv.pdf.SetXY(iv.marginLeft+140, 60)
+	iv.printLnPdfText("KD83383", "", 11, "L")
+	iv.printLnPdfText("RE20230002", "", 11, "L")
+	iv.printLnPdfText("23.04.2023", "", 11, "L")
 
-	iv.writePdfText("Kundennummer: KD83383", "", 11, "R")
-	iv.writePdfText("Rechnungsnummer: RE20230002", "", 11, "R")
-	iv.writePdfText("Dateum: 23.04.2023", "", 11, "R")
-
-	iv.drawLine(25, 111, 186, 111, lineColor)
-
-	iv.pdf.SetXY(25, 117)
-	iv.writePdfText("ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, "L")
+	//
+	//iv.drawLine(25, 111, 186, 111, lineColor)
+	//
+	//iv.pdf.SetXY(25, 117)
+	//iv.printPdfText("ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, "L")
 
 	return iv.pdf, iv.pdf.Error()
 }
