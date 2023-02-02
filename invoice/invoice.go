@@ -123,7 +123,7 @@ type color struct {
 	b uint8
 }
 
-func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
+func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	lineColor := color{200, 200, 200}
 
@@ -132,28 +132,31 @@ func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
 	iv.newPDF()
 	pageWidth, _ := iv.pdf.GetPageSize()
 
-	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	err := iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	if err != nil {
+		return iv.pdf, err
+	}
 
+	//Anschrift Empfänger
 	iv.pdf.SetXY(pageWidth-iv.marginRight, 61)
 	iv.printLnPdfText("Mein Name Gmbh", "", iv.textSize, "R")
 	iv.printLnPdfText("Meine Paulaner-Str. 99", "", iv.textSize, "R")
 	iv.printLnPdfText("Meine Str Zusatz", "", iv.textSize, "R")
 	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "R")
 
+	//Anschrift Sender small
 	iv.pdf.SetXY(iv.marginLeft, 61)
 	iv.printPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "L")
 
+	//Anschrift Sender
 	iv.pdf.SetXY(iv.marginLeft, 70)
 	iv.printLnPdfText("Firmen Name Gmbh", "", iv.textSize, "L")
 	iv.printLnPdfText("Frau Musterfrau", "", iv.textSize, "L")
 	iv.printLnPdfText("Paulaner-Str. 99", "", iv.textSize, "L")
+	iv.printLnPdfText("Str. Zusatz", "", iv.textSize, "L")
 	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "L")
 
-	iv.drawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
-
-	iv.pdf.SetXY(iv.marginLeft, 122)
-	iv.printPdfText("Rechnung - 4", "b", 16, "L")
-
+	//Meta Infos Rechnung in 2 Spalten
 	iv.pdf.SetXY(iv.marginLeft+100, 100)
 	iv.printLnPdfText("Kundennummer:", "", 11, "L")
 	iv.printLnPdfText("Rechnungsnummer:", "", 11, "L")
@@ -163,6 +166,22 @@ func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
 	iv.printLnPdfText("KD83383", "", 11, "L")
 	iv.printLnPdfText("RE20230002", "", 11, "L")
 	iv.printLnPdfText("23.04.2023", "", 11, "L")
+
+	//Überschrift
+	iv.drawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
+	iv.pdf.SetXY(iv.marginLeft, 122)
+	iv.printPdfText("Rechnung - 4", "b", 16, "L")
+
+	//Tabelle
+	iv.pdf.SetFillColor(200, 200, 200)
+	const colNumber = 5
+	header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
+	colWidth := [colNumber]float64{10.0, 50.0, 40.0, 30.0, 30.0}
+	lineHt := 10.0
+	iv.pdf.SetXY(iv.marginLeft, iv.pdf.GetY()+iv.lineHeight+10.0)
+	for colJ := 0; colJ < colNumber; colJ++ {
+		iv.pdf.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
+	}
 
 	return iv.pdf, iv.pdf.Error()
 }

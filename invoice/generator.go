@@ -51,6 +51,14 @@ func (iv *Invoice) printPdfText(text string, styleStr string, textSize float64, 
 	}
 }
 
+// printLnPdfText
+//
+//	 prints a line with line break
+//
+//		text		the text to print
+//		styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
+//		textSize	the text size
+//		alignStr	"L" right, "C" center, "R" right
 func (iv *Invoice) printLnPdfText(text string, styleStr string, textSize float64, alignStr string) {
 	currentX := iv.pdf.GetX()
 	iv.printPdfText(text, styleStr, textSize, alignStr)
