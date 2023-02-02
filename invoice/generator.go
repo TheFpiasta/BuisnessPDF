@@ -41,11 +41,10 @@ func (iv *Invoice) printPdfText(text string, styleStr string, textSize float64, 
 	case "R":
 		stringWidth := iv.pdf.GetStringWidth(text) + 2
 		x := iv.pdf.GetX()
-		y := iv.pdf.GetY()
 
-		iv.pdf.SetXY(x-stringWidth, y)
+		iv.pdf.SetX(x - stringWidth)
 		iv.pdf.Cell(stringWidth, lineHeight, text)
-		iv.pdf.SetXY(x-stringWidth, y)
+		iv.pdf.SetX(x - stringWidth)
 	case "C":
 	default:
 		iv.pdf.SetError(errors.New("can't interpret the given text align code"))
@@ -55,22 +54,13 @@ func (iv *Invoice) printPdfText(text string, styleStr string, textSize float64, 
 func (iv *Invoice) printLnPdfText(text string, styleStr string, textSize float64, alignStr string) {
 	currentX := iv.pdf.GetX()
 	iv.printPdfText(text, styleStr, textSize, alignStr)
-	iv.newLine(alignStr, currentX)
+	iv.newLine(currentX)
 }
 
-func (iv *Invoice) newLine(alignStr string, oldX float64) {
+func (iv *Invoice) newLine(oldX float64) {
 	_, lineHeight := iv.pdf.GetFontSize()
 	currentY := iv.pdf.GetY() + lineHeight + iv.fontGapY
-
-	switch alignStr {
-	case "L":
-		iv.pdf.SetXY(oldX, currentY)
-	case "R":
-		iv.pdf.SetXY(oldX, currentY)
-	case "C":
-	default:
-		iv.pdf.SetError(errors.New("can't interpret the given text align code"))
-	}
+	iv.pdf.SetXY(oldX, currentY)
 }
 
 func (iv *Invoice) drawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64) {

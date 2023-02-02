@@ -134,35 +134,35 @@ func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
 
 	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
 
-	iv.pdf.SetXY(iv.marginLeft, 51)
+	iv.pdf.SetXY(pageWidth-iv.marginRight, 61)
+	iv.printLnPdfText("Mein Name Gmbh", "", iv.textSize, "R")
+	iv.printLnPdfText("Meine Paulaner-Str. 99", "", iv.textSize, "R")
+	iv.printLnPdfText("Meine Str Zusatz", "", iv.textSize, "R")
+	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "R")
+
+	iv.pdf.SetXY(iv.marginLeft, 61)
 	iv.printPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "L")
 
-	iv.pdf.SetXY(iv.marginLeft, 60)
+	iv.pdf.SetXY(iv.marginLeft, 70)
 	iv.printLnPdfText("Firmen Name Gmbh", "", iv.textSize, "L")
 	iv.printLnPdfText("Frau Musterfrau", "", iv.textSize, "L")
 	iv.printLnPdfText("Paulaner-Str. 99", "", iv.textSize, "L")
 	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "L")
 
-	iv.drawLine(iv.marginLeft, 94, pageWidth-iv.marginRight-iv.marginLeft, 94, lineColor)
+	iv.drawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
 
-	iv.pdf.SetXY(iv.marginLeft, 96)
+	iv.pdf.SetXY(iv.marginLeft, 122)
 	iv.printPdfText("Rechnung - 4", "b", 16, "L")
 
-	iv.pdf.SetXY(iv.marginLeft+100, 60)
+	iv.pdf.SetXY(iv.marginLeft+100, 100)
 	iv.printLnPdfText("Kundennummer:", "", 11, "L")
 	iv.printLnPdfText("Rechnungsnummer:", "", 11, "L")
 	iv.printLnPdfText("Datum:", "", 11, "L")
 
-	iv.pdf.SetXY(iv.marginLeft+140, 60)
+	iv.pdf.SetXY(iv.marginLeft+140, 100)
 	iv.printLnPdfText("KD83383", "", 11, "L")
 	iv.printLnPdfText("RE20230002", "", 11, "L")
 	iv.printLnPdfText("23.04.2023", "", 11, "L")
-
-	//
-	//iv.drawLine(25, 111, 186, 111, lineColor)
-	//
-	//iv.pdf.SetXY(25, 117)
-	//iv.printPdfText("ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, "L")
 
 	return iv.pdf, iv.pdf.Error()
 }
