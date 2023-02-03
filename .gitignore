@@ -17,4 +17,4 @@
 #custom
 go.sum
 .idea
-/fonts/*
+/fonts/*.ttf

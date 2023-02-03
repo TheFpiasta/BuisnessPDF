@@ -1,6 +1,7 @@
 package invoice
 
 import (
+	"SimpleInvoice/generator"
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -87,8 +88,10 @@ type invoicedItems struct {
 }
 
 func New(logger *zerolog.Logger) (iv *Invoice) {
+
 	iv = &Invoice{
-		logger:        logger,
+		logger: logger,
+
 		textFont:      "openSans",
 		lineHeight:    5,
 		textSize:      11,
@@ -125,65 +128,75 @@ type color struct {
 
 func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
-	lineColor := color{200, 200, 200}
+	lineColor := generator.Color{R: 200, G: 200, B: 200}
 
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
-	iv.newPDF()
-	pageWidth, _ := iv.pdf.GetPageSize()
+	pdfGen := generator.NewPDFGenerator(generator.MetaData{
+		LineHeight:  5,
+		FontName:    "openSans",
+		FontGapY:    2,
+		FontSize:    11,
+		MarginLeft:  0,
+		MarginTop:   0,
+		MarginRight: 0,
+		Unit:        "mm",
+	})
 
-	err := iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+
+	err := pdfGen.PlaceImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
 	if err != nil {
 		return iv.pdf, err
 	}
 
 	//Anschrift Empfänger
-	iv.pdf.SetXY(pageWidth-iv.marginRight, 61)
-	iv.printLnPdfText("Mein Name Gmbh", "", iv.textSize, "R")
-	iv.printLnPdfText("Meine Paulaner-Str. 99", "", iv.textSize, "R")
-	iv.printLnPdfText("Meine Str Zusatz", "", iv.textSize, "R")
-	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "R")
+	pdfGen.SetCursor(pageWidth-iv.marginRight, 61)
+	pdfGen.PrintLnPdfText("Mein Name Gmbh", "", iv.textSize, "R")
+	pdfGen.PrintLnPdfText("Meine Paulaner-Str. 99", "", iv.textSize, "R")
+	pdfGen.PrintLnPdfText("Meine Str Zusatz", "", iv.textSize, "R")
+	pdfGen.PrintLnPdfText("04109 Leipzig", "", iv.textSize, "R")
 
 	//Anschrift Sender small
-	iv.pdf.SetXY(iv.marginLeft, 61)
-	iv.printPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "L")
+	pdfGen.SetCursor(iv.marginLeft, 61)
+	pdfGen.PrintPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", iv.textSizeSmall, "L")
 
 	//Anschrift Sender
-	iv.pdf.SetXY(iv.marginLeft, 70)
-	iv.printLnPdfText("Firmen Name Gmbh", "", iv.textSize, "L")
-	iv.printLnPdfText("Frau Musterfrau", "", iv.textSize, "L")
-	iv.printLnPdfText("Paulaner-Str. 99", "", iv.textSize, "L")
-	iv.printLnPdfText("Str. Zusatz", "", iv.textSize, "L")
-	iv.printLnPdfText("04109 Leipzig", "", iv.textSize, "L")
+	pdfGen.SetCursor(iv.marginLeft, 70)
+	pdfGen.PrintLnPdfText("Firmen Name Gmbh", "", iv.textSize, "L")
+	pdfGen.PrintLnPdfText("Frau Musterfrau", "", iv.textSize, "L")
+	pdfGen.PrintLnPdfText("Paulaner-Str. 99", "", iv.textSize, "L")
+	pdfGen.PrintLnPdfText("Str. Zusatz", "", iv.textSize, "L")
+	pdfGen.PrintLnPdfText("04109 Leipzig", "", iv.textSize, "L")
 
-	//Meta Infos Rechnung in 2 Spalten
-	iv.pdf.SetXY(iv.marginLeft+100, 100)
-	iv.printLnPdfText("Kundennummer:", "", 11, "L")
-	iv.printLnPdfText("Rechnungsnummer:", "", 11, "L")
-	iv.printLnPdfText("Datum:", "", 11, "L")
+	//MetaData Infos Rechnung in 2 Spalten
+	pdfGen.SetCursor(iv.marginLeft+100, 100)
+	pdfGen.PrintLnPdfText("Kundennummer:", "", 11, "L")
+	pdfGen.PrintLnPdfText("Rechnungsnummer:", "", 11, "L")
+	pdfGen.PrintLnPdfText("Datum:", "", 11, "L")
 
-	iv.pdf.SetXY(iv.marginLeft+140, 100)
-	iv.printLnPdfText("KD83383", "", 11, "L")
-	iv.printLnPdfText("RE20230002", "", 11, "L")
-	iv.printLnPdfText("23.04.2023", "", 11, "L")
+	pdfGen.SetCursor(iv.marginLeft+140, 100)
+	pdfGen.PrintLnPdfText("KD83383", "", 11, "L")
+	pdfGen.PrintLnPdfText("RE20230002", "", 11, "L")
+	pdfGen.PrintLnPdfText("23.04.2023", "", 11, "L")
 
 	//Überschrift
-	iv.drawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
-	iv.pdf.SetXY(iv.marginLeft, 122)
-	iv.printPdfText("Rechnung - 4", "b", 16, "L")
+	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
+	pdfGen.SetCursor(iv.marginLeft, 122)
+	pdfGen.PrintPdfText("Rechnung - 4", "b", 16, "L")
 
-	//Tabelle
-	iv.pdf.SetFillColor(200, 200, 200)
-	const colNumber = 5
-	header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
-	colWidth := [colNumber]float64{10.0, 50.0, 40.0, 30.0, 30.0}
-	lineHt := 10.0
-	iv.pdf.SetXY(iv.marginLeft, iv.pdf.GetY()+iv.lineHeight+10.0)
-	for colJ := 0; colJ < colNumber; colJ++ {
-		iv.pdf.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
-	}
+	////Tabelle
+	//iv.pdfGen.SetFillColor(200, 200, 200)
+	//const colNumber = 5
+	//header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
+	//colWidth := [colNumber]float64{10.0, 50.0, 40.0, 30.0, 30.0}
+	//lineHt := 10.0
+	//pdfGen.SetCursor(iv.marginLeft, iv.pdfGen.GetY()+iv.lineHeight+10.0)
+	//for colJ := 0; colJ < colNumber; colJ++ {
+	//	iv.pdfGen.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
+	//}
 
-	return iv.pdf, iv.pdf.Error()
+	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
