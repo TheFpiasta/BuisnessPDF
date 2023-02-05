@@ -19,8 +19,8 @@ type MetaData struct {
 }
 
 type Generator interface {
-	PrintPdfText(text string, styleStr string, textSize float64, alignStr string)
-	PrintLnPdfText(text string, styleStr string, textSize float64, alignStr string)
+	PrintPdfText(text string, styleStr string, alignStr string)
+	PrintLnPdfText(text string, styleStr string, alignStr string)
 	DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64)
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color)
 	PlaceImgOnPosXY(logoUrl string, posX int, posY int) (err error)
@@ -35,10 +35,11 @@ type Generator interface {
 	GetFontGapY() float64
 	GetMarginTop() float64
 	GetMarginRight() float64
-	GetTextSize() float64
+	GetFontSize() float64
 	SetLineHeight(lineHeight float64)
 	SetFontGapY(fontGapY float64)
-	SetTextSize(textSize float64)
+	SetFontSize(textSize float64)
+	PrintTable(header []string, columnWidth []float64, items [][]string)
 }
 
 type Color struct {

@@ -34,7 +34,7 @@ func (core *PDFGenerator) GetMarginRight() float64 {
 	return core.data.MarginRight
 }
 
-func (core *PDFGenerator) GetTextSize() float64 {
+func (core *PDFGenerator) GetFontSize() float64 {
 	return core.data.FontSize
 }
 
@@ -46,6 +46,6 @@ func (core *PDFGenerator) SetFontGapY(fontGapY float64) {
 	core.data.FontGapY = fontGapY
 }
 
-func (core *PDFGenerator) SetTextSize(textSize float64) {
+func (core *PDFGenerator) SetFontSize(textSize float64) {
 	core.data.FontSize = textSize
 }

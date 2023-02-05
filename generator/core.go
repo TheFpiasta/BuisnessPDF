@@ -38,8 +38,8 @@ func (core *PDFGenerator) SetCursor(x float64, y float64) {
 //	styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
 //	textSize	the text size
 //	alignStr	"L" right, "C" center, "R" right
-func (core *PDFGenerator) PrintPdfText(text string, styleStr string, textSize float64, alignStr string) {
-	core.pdf.SetFont(core.data.FontName, styleStr, textSize)
+func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr string) {
+	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
 	pageWidth, _ := core.pdf.GetPageSize()
 	saveWriteArea := pageWidth - core.data.MarginLeft - core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
@@ -68,9 +68,9 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, textSize fl
 //		styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
 //		textSize	the text size
 //		alignStr	"L" right, "C" center, "R" right
-func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, textSize float64, alignStr string) {
+func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr string) {
 	currentX := core.pdf.GetX()
-	core.PrintPdfText(text, styleStr, textSize, alignStr)
+	core.PrintPdfText(text, styleStr, alignStr)
 	core.newLine(currentX)
 }
 
@@ -113,5 +113,22 @@ func (core *PDFGenerator) PlaceImgOnPosXY(logoUrl string, posX int, posY int) (e
 	}
 
 	return core.pdf.Error()
+}
+
+// TODO add to def
+func (core *PDFGenerator) PrintTable(header []string, columnWidth []float64, items [][]string) {
+	//fillColor := Color{R: 200, G: 200, B: 200}
+	//const colNumber = 5
+	//header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
+	//colWidth := [colNumber]float64{10.0, 50.0, 40.0, 30.0, 30.0}
+	//lineHt := 10.0
+	//pdfGen.SetCursor(iv.marginLeft, iv.pdfGen.GetY()+iv.lineHeight+10.0)
+	//for colJ := 0; colJ < colNumber; colJ++ {
+	//	iv.pdfGen.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
+	//}
+
+}
+
+func (core *PDFGenerator) printTableHeader() {
 
 }
