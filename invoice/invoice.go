@@ -180,7 +180,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("23.04.2023", "", "L")
 
 	//Überschrift
-	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
+	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 122)
 	pdfGen.SetFontSize(headerFontSize)
 	pdfGen.PrintPdfText("Rechnung - 4", "b", "L")
@@ -195,7 +195,21 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	//	SinglePrice    float64
 	//	NetPrice       float64
 	//}
-	pdfGen.PrintTable([]string{}, []float64{}, [][]string{})
+
+	getCellWith := func(percent float64) float64 {
+		maxSavePrintingWidth, _ := pdfGen.GetPdf().GetPageSize()
+		maxSavePrintingWidth = maxSavePrintingWidth - pdfGen.GetMarginLeft() - pdfGen.GetMarginRight()
+
+		return (percent * maxSavePrintingWidth) / 100.0
+	}
+
+	pdfGen.SetCursor(iv.marginLeft, 200)
+	pdfGen.PrintTable(
+		[]string{"Position", "Anzahl", "Einheit", "Beschreibung", "Einzelpreis", "Netto"},
+		[]float64{getCellWith(11), getCellWith(11), getCellWith(14), getCellWith(34), getCellWith(15), getCellWith(15)},
+		[][]string{0: {"1", "50,00", "h (Stunden)", "Softwareentwicklung", "40,00€", "2.000,00€"}},
+		[][]string{{"Gesamtbetrag", "2.000,00€"}},
+	)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
