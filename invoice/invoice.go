@@ -1,6 +1,7 @@
 package invoice
 
 import (
+	"SimpleInvoice/generator"
 	"fmt"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -8,10 +9,17 @@ import (
 )
 
 type Invoice struct {
-	pdfData  invoicePdfData
-	pdf      *gofpdf.Fpdf
-	logger   *zerolog.Logger
-	textFont string
+	pdfData       invoicePdfData
+	pdf           *gofpdf.Fpdf
+	logger        *zerolog.Logger
+	textFont      string
+	lineHeight    float64
+	textSize      float64
+	textSizeSmall float64
+	marginLeft    float64
+	marginRight   float64
+	marginTop     float64
+	fontGapY      float64
 }
 
 type invoicePdfData struct {
@@ -63,15 +71,19 @@ type invoiceBody struct {
 	ClosingText     string          `json:"closingText"`
 	UstNotice       string          `json:"ustNotice"`
 	InvoicedItems   []invoicedItems `json:"invoicedItems"`
+	InvoicedSum     invoicedSum     `json:"invoicedSum"`
 }
 
 type invoicedItems struct {
-	PositionNumber    int     `json:"positionNumber"`
-	Quantity          float64 `json:"quantity"`
-	Unit              string  `json:"unit"`
-	Description       string  `json:"description"`
-	SinglePrice       float64 `json:"singlePrice"`
-	SinglePriceNet    float64 `json:"singlePriceNet"`
+	PositionNumber int     `json:"positionNumber"`
+	Quantity       float64 `json:"quantity"`
+	Unit           string  `json:"unit"`
+	Description    string  `json:"description"`
+	SinglePrice    float64 `json:"singlePrice"`
+	NetPrice       float64 `json:"netPrice"`
+}
+
+type invoicedSum struct {
 	OverallPriceNet   float64 `json:"overallPriceNet"`
 	OverallPriceGross float64 `json:"overallPriceGross"`
 	OverallTaxes      float64 `json:"overallTaxes"`
@@ -80,9 +92,13 @@ type invoicedItems struct {
 }
 
 func New(logger *zerolog.Logger) (iv *Invoice) {
+
 	iv = &Invoice{
-		logger:   logger,
-		textFont: "Arial",
+		logger:      logger,
+		textFont:    "openSans",
+		marginLeft:  25,
+		marginRight: 20,
+		marginTop:   45,
 	}
 
 	return iv
@@ -103,34 +119,85 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 	return nil
 }
 
-type color struct {
-	r uint8
-	g uint8
-	b uint8
-}
+func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
-func (iv *Invoice) GeneratePDF() (pdf *gofpdf.Fpdf, err error) {
-	lineColor := color{200, 200, 200}
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
-	iv.newPDF()
-	err = iv.placeImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
-	iv.drawPdfTextCell(25, 51, "FirmenName Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", 8, 60, 3)
+	lineColor := generator.Color{R: 200, G: 200, B: 200}
+	const defaultFontSize = 11
+	const smallFontSize = 8
+	const headerFontSize = 16
 
-	iv.drawPdfTextCell(25, 58, "FirmenName Gmbh", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 63, "Frau Musterfrau", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 68, "Paulaner-Str. 99", "", 11, 60, 4)
-	iv.drawPdfTextCell(25, 73, "04109 Leipzig", "", 11, 60, 4)
-	iv.drawLine(25, 94, 186, 94, lineColor)
-	iv.drawPdfTextCell(25, 96, "Rechnung - 4", "b", 16, 60, 4)
-	iv.drawPdfTextRightAligned(185, 96, "Kundennummer: KD83383", "", 11, 60, 4)
-	iv.drawPdfTextRightAligned(185, 101, "Rechnungsnummer: RE20230002", "", 11, 60, 4)
-	iv.drawPdfTextRightAligned(185, 106, "Dateum: 23.04.2023", "", 11, 60, 4)
-	iv.drawLine(25, 111, 186, 111, lineColor)
+	pdfGen := generator.NewPDFGenerator(generator.MetaData{
+		LineHeight:  5,
+		FontName:    "openSans",
+		FontGapY:    1.5,
+		FontSize:    defaultFontSize,
+		MarginLeft:  iv.marginLeft,
+		MarginTop:   iv.marginTop,
+		MarginRight: iv.marginRight,
+		Unit:        "mm",
+	})
 
-	iv.drawPdfTextCell(25, 117, "ciĝas ĉe paĝo Vielen Dank für Ihr Vertrauen!\nHiermit stelle ich Ihnen die folgenden Positionen in Rechnung.", "", 11, 60, 4)
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 
-	return iv.pdf, err
+	err := pdfGen.PlaceImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	if err != nil {
+		return iv.pdf, err
+	}
+
+	//Anschrift Empfänger
+	pdfGen.SetCursor(pageWidth-iv.marginRight, 61)
+
+	pdfGen.PrintLnPdfText("Mein Name Gmbh", "", "R")
+	pdfGen.PrintLnPdfText("Meine Paulaner-Str. 99", "", "R")
+	pdfGen.PrintLnPdfText("Meine Str Zusatz", "", "R")
+	pdfGen.PrintLnPdfText("04109 Leipzig", "", "R")
+
+	//Anschrift Sender small
+	pdfGen.SetCursor(iv.marginLeft, 61)
+	pdfGen.SetFontSize(smallFontSize)
+	pdfGen.PrintPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", "L")
+	pdfGen.SetFontSize(defaultFontSize)
+
+	//Anschrift Sender
+	pdfGen.SetCursor(iv.marginLeft, 70)
+	pdfGen.PrintLnPdfText("Firmen Name Gmbh", "", "L")
+	pdfGen.PrintLnPdfText("Frau Musterfrau", "", "L")
+	pdfGen.PrintLnPdfText("Paulaner-Str. 99", "", "L")
+	pdfGen.PrintLnPdfText("Str. Zusatz", "", "L")
+	pdfGen.PrintLnPdfText("04109 Leipzig", "", "L")
+
+	//MetaData Infos Rechnung in 2 Spalten
+	pdfGen.SetCursor(iv.marginLeft+100, 100)
+	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
+	pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
+	pdfGen.PrintLnPdfText("Datum:", "", "L")
+
+	pdfGen.SetCursor(iv.marginLeft+140, 100)
+	pdfGen.PrintLnPdfText("KD83383", "", "L")
+	pdfGen.PrintLnPdfText("RE20230002", "", "L")
+	pdfGen.PrintLnPdfText("23.04.2023", "", "L")
+
+	//Überschrift
+	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
+	pdfGen.SetCursor(iv.marginLeft, 122)
+	pdfGen.SetFontSize(headerFontSize)
+	pdfGen.PrintPdfText("Rechnung - 4", "b", "L")
+	pdfGen.SetFontSize(defaultFontSize)
+
+	//Tabelle
+	//type InvoiceItemData struct {
+	//	PositionNumber uint
+	//	Quantity       float64
+	//	Unit           string
+	//	Description    string
+	//	SinglePrice    float64
+	//	NetPrice       float64
+	//}
+	pdfGen.PrintTable([]string{}, []float64{}, [][]string{})
+
+	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
