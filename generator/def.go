@@ -25,6 +25,7 @@ type Generator interface {
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
 	PlaceImgOnPosXY(logoUrl string, posX int, posY int) (err error)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, lineHeight float64, stringWidth float64)
+	PrintTable(header []string, columnWidth []float64, items [][]string, summary [][]string, summaryWidths [][]float64)
 
 	GetError() error
 	GetPdf() *gofpdf.Fpdf
@@ -37,10 +38,10 @@ type Generator interface {
 	GetMarginTop() float64
 	GetMarginRight() float64
 	GetFontSize() float64
+
 	SetLineHeight(lineHeight float64)
 	SetFontGapY(fontGapY float64)
 	SetFontSize(textSize float64)
-	//PrintTable(header []string, columnWidth []float64, items [][]string)
 }
 
 type Color struct {

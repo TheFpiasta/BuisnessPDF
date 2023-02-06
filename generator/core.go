@@ -155,31 +155,18 @@ func (core *PDFGenerator) PlaceImgOnPosXY(logoUrl string, posX int, posY int) (e
 	return core.pdf.Error()
 }
 
-// TODO add to def
-func (core *PDFGenerator) PrintTable(header []string, columnWidth []float64, items [][]string, summary [][]string) {
-
+func (core *PDFGenerator) PrintTable(header []string, columnWidth []float64, items [][]string, summary [][2]string, summaryWidths [3]float64) {
 	var tableWidth float64
 	for _, width := range columnWidth {
 		tableWidth += width
 	}
 
-	core.printTableHeader(header, columnWidth, tableWidth)
-	core.printTableItems(items, columnWidth, tableWidth)
-	core.printTableSummary(summary, columnWidth, tableWidth)
-
-	//fillColor := Color{R: 200, G: 200, B: 200}
-	//const colNumber = 5
-	//header := [colNumber]string{"No", "Description", "Quantity", "Unit Price ($)", "Price ($)"}
-	//colWidth := [colNumber]float64{10.0, 50.0, 40.0, 30.0, 30.0}
-	//lineHt := 10.0
-	//pdfGen.SetCursor(iv.marginLeft, iv.pdfGen.GetY()+iv.lineHeight+10.0)
-	//for colJ := 0; colJ < colNumber; colJ++ {
-	//	iv.pdfGen.CellFormat(colWidth[colJ], lineHt, header[colJ], "1", 0, "CM", true, 0, "")
-	//}
-
+	core.printTableHeader(header, columnWidth)
+	core.printTableItems(items, columnWidth)
+	core.printTableSummary(summary, summaryWidths, tableWidth)
 }
 
-func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float64, tableWidth float64) {
+func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float64) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -191,7 +178,7 @@ func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float6
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float64, tableWidth float64) {
+func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float64) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -204,6 +191,21 @@ func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float6
 	}
 }
 
-func (core *PDFGenerator) printTableSummary(summary [][]string, columnWidth []float64, tableWidth float64) {
+func (core *PDFGenerator) printTableSummary(summary [][2]string, summaryWidths [3]float64, tableWidth float64) {
+	referenceX := core.pdf.GetX()
+	_, lineHeight := core.pdf.GetFontSize()
+	newlineHeight := lineHeight + core.data.FontGapY*2
+
+	for i, text := range summary {
+		boarderStr := ""
+		if len(summary)-1 == i {
+			boarderStr = "B"
+		}
+
+		core.PrintPdfTextFormatted("", "", "L", "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[0])
+		core.PrintPdfTextFormatted(text[0], "", "L", boarderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[1])
+		core.PrintPdfTextFormatted(text[1], "", "L", boarderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[2])
+		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
+	}
 
 }
