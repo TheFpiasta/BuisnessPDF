@@ -183,18 +183,19 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 122)
 	pdfGen.SetFontSize(headerFontSize)
-	pdfGen.PrintPdfText("Rechnung - 4", "b", "L")
+	pdfGen.PrintLnPdfText("Rechnung - 4", "b", "L")
 	pdfGen.SetFontSize(defaultFontSize)
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
 
-	//Tabelle
-	//type InvoiceItemData struct {
-	//	PositionNumber uint
-	//	Quantity       float64
-	//	Unit           string
-	//	Description    string
-	//	SinglePrice    float64
-	//	NetPrice       float64
-	//}
+	pdfGen.PrintLnPdfText("Sehr geehrter Herr Mustermann,", "", "L")
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
+
+	pdfGen.PrintLnPdfText("lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor \n     invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.", "", "L")
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
+
+	pdfGen.SetFontSize(smallFontSize)
+	pdfGen.PrintLnPdfText("Leistungszeitraum: 01.01.1999 - 01.01.2023", "i", "L")
+	pdfGen.SetFontSize(defaultFontSize)
 
 	getCellWith := func(percent float64) float64 {
 		maxSavePrintingWidth, _ := pdfGen.GetPdf().GetPageSize()
@@ -203,7 +204,6 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return (percent * maxSavePrintingWidth) / 100.0
 	}
 
-	pdfGen.SetCursor(iv.marginLeft, 200)
 	pdfGen.PrintInvoiceTable(
 		[]string{"Position", "Anzahl", "Beschreibung", "USt", "Einzelpreis", "Netto"},
 		[]float64{getCellWith(11), getCellWith(11), getCellWith(40), getCellWith(8), getCellWith(15), getCellWith(15)},

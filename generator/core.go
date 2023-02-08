@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/jung-kurt/gofpdf"
 	"net/http"
+	"strings"
 )
 
 func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
@@ -74,15 +75,38 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 //		textSize	the text size
 //		alignStr	"L" right, "C" center, "R" right
 func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr string) {
+	lines := core.extractLinesFromText(text)
 	currentX := core.pdf.GetX()
-	core.PrintPdfText(text, styleStr, alignStr)
-	core.newLine(currentX)
+
+	for _, line := range lines {
+		core.PrintPdfText(line, styleStr, alignStr)
+		core.NewLine(currentX)
+	}
 }
 
-func (core *PDFGenerator) newLine(oldX float64) {
+func (core *PDFGenerator) NewLine(oldX float64) {
 	_, lineHeight := core.pdf.GetFontSize()
 	newY := core.pdf.GetY() + lineHeight + core.data.FontGapY
 	core.pdf.SetXY(oldX, newY)
+}
+
+func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string) {
+	textLines = strings.Split(text, "\n")
+	for i, line := range textLines {
+		removeStr := 0
+		for _, c := range line {
+			if c != 32 {
+				break
+			}
+			removeStr++
+		}
+
+		if removeStr > 0 {
+			textLines[i] = line[removeStr:]
+		}
+	}
+
+	return textLines
 }
 
 // PrintPdfTextFormatted
@@ -171,6 +195,28 @@ func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float6
 			core.PrintPdfTextFormatted(text, "", alignStrings[j], "B", false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
 		}
 		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
+
+		//var extractedItems [][]string
+		//var maxItems = 0
+		//
+		//for _, text := range item {
+		//	extractedItem := core.extractLinesFromText(text)
+		//	maxItems = int(math.Max(float64(maxItems), float64(len(extractedItem))))
+		//	extractedItems = append(extractedItems, extractedItem)
+		//}
+		//
+		//for _, eItem := range extractedItems {
+		//	for j, text := range eItem {
+		//		borderStr := ""
+		//
+		//		if j == maxItems-1 {
+		//			borderStr = "B"
+		//		}
+		//
+		//		core.PrintPdfTextFormatted(text, "", alignStrings[j], borderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
+		//	}
+		//}
+		//core.SetCursor(referenceX, (core.pdf.GetY()+newlineHeight)* float64(maxItems))
 	}
 }
 
