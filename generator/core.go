@@ -103,20 +103,7 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 	//stringWidth := core.pdf.GetStringWidth(text) + 2
 
 	core.pdf.SetFillColor(int(backgroundColor.R), int(backgroundColor.G), int(backgroundColor.B))
-	switch alignStr {
-	case "L":
-		core.pdf.CellFormat(stringWidth, lineHeight, text, borderStr, 0, "LM", fill, 0, "")
-	case "R":
-		x := core.pdf.GetX()
-		core.pdf.SetX(x - stringWidth)
-		core.pdf.CellFormat(stringWidth, lineHeight, text, borderStr, 0, "LM", fill, 0, "")
-	case "C":
-		x := core.pdf.GetX()
-		core.pdf.SetX(x - stringWidth/2)
-		core.pdf.CellFormat(stringWidth, lineHeight, text, borderStr, 0, "LM", fill, 0, "")
-	default:
-		core.pdf.SetError(errors.New("can't interpret the given text align code"))
-	}
+	core.pdf.CellFormat(stringWidth, lineHeight, text, borderStr, 0, alignStr, fill, 0, "")
 }
 
 func (core *PDFGenerator) DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64) {
@@ -155,15 +142,11 @@ func (core *PDFGenerator) PlaceImgOnPosXY(logoUrl string, posX int, posY int) (e
 	return core.pdf.Error()
 }
 
-func (core *PDFGenerator) PrintTable(header []string, columnWidth []float64, items [][]string, summary [][2]string, summaryWidths [3]float64) {
-	var tableWidth float64
-	for _, width := range columnWidth {
-		tableWidth += width
-	}
+func (core *PDFGenerator) PrintInvoiceTable(header []string, columnWidth []float64, items [][]string, summary [][2]string, summaryWidths [3]float64, itemsAlignString []string) {
 
 	core.printTableHeader(header, columnWidth)
-	core.printTableItems(items, columnWidth)
-	core.printTableSummary(summary, summaryWidths, tableWidth)
+	core.printTableItems(items, columnWidth, itemsAlignString)
+	core.printTableSummary(summary, summaryWidths)
 }
 
 func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float64) {
@@ -172,39 +155,43 @@ func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float6
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
 	for i, text := range header {
-		core.PrintPdfTextFormatted(text, "b", "L", "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
+		core.PrintPdfTextFormatted(text, "b", "LM", "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
 	}
 
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float64) {
+func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float64, alignStrings []string) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
 	for _, item := range items {
 		for j, text := range item {
-			core.PrintPdfTextFormatted(text, "", "L", "B", false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
+			core.PrintPdfTextFormatted(text, "", alignStrings[j], "B", false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
 		}
 		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 	}
 }
 
-func (core *PDFGenerator) printTableSummary(summary [][2]string, summaryWidths [3]float64, tableWidth float64) {
+func (core *PDFGenerator) printTableSummary(summary [][2]string, summaryWidths [3]float64) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
 	for i, text := range summary {
 		boarderStr := ""
+		fill := false
+		styleStr := ""
 		if len(summary)-1 == i {
-			boarderStr = "B"
+			boarderStr = "BT"
+			fill = true
+			styleStr = "B"
 		}
 
-		core.PrintPdfTextFormatted("", "", "L", "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[0])
-		core.PrintPdfTextFormatted(text[0], "", "L", boarderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[1])
-		core.PrintPdfTextFormatted(text[1], "", "L", boarderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[2])
+		core.PrintPdfTextFormatted("", "", "LM", "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[0])
+		core.PrintPdfTextFormatted(text[0], styleStr, "LM", boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[1])
+		core.PrintPdfTextFormatted(text[1], styleStr, "RM", boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[2])
 		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 	}
 

@@ -204,7 +204,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	}
 
 	pdfGen.SetCursor(iv.marginLeft, 200)
-	pdfGen.PrintTable(
+	pdfGen.PrintInvoiceTable(
 		[]string{"Position", "Anzahl", "Beschreibung", "USt", "Einzelpreis", "Netto"},
 		[]float64{getCellWith(11), getCellWith(11), getCellWith(40), getCellWith(8), getCellWith(15), getCellWith(15)},
 		[][]string{
@@ -218,6 +218,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 			{"Gesamtbetrag", "2.000,00€"},
 		},
 		[3]float64{getCellWith(60), getCellWith(25), getCellWith(15)},
+		[]string{"LM", "LM", "LM", "LM", "RM", "RM"},
 	)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
