@@ -3,6 +3,7 @@ package generator
 import (
 	"errors"
 	"github.com/jung-kurt/gofpdf"
+	"math"
 	"net/http"
 	"strings"
 )
@@ -191,32 +192,32 @@ func (core *PDFGenerator) printTableItems(items [][]string, columnWidth []float6
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
 	for _, item := range items {
-		for j, text := range item {
-			core.PrintPdfTextFormatted(text, "", alignStrings[j], "B", false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
-		}
-		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
+		var extractedItems [][]string
+		var maxItems = 0
 
-		//var extractedItems [][]string
-		//var maxItems = 0
-		//
-		//for _, text := range item {
-		//	extractedItem := core.extractLinesFromText(text)
-		//	maxItems = int(math.Max(float64(maxItems), float64(len(extractedItem))))
-		//	extractedItems = append(extractedItems, extractedItem)
-		//}
-		//
-		//for _, eItem := range extractedItems {
-		//	for j, text := range eItem {
-		//		borderStr := ""
-		//
-		//		if j == maxItems-1 {
-		//			borderStr = "B"
-		//		}
-		//
-		//		core.PrintPdfTextFormatted(text, "", alignStrings[j], borderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
-		//	}
-		//}
-		//core.SetCursor(referenceX, (core.pdf.GetY()+newlineHeight)* float64(maxItems))
+		for _, text := range item {
+			extractedItem := core.extractLinesFromText(text)
+			maxItems = int(math.Max(float64(maxItems), float64(len(extractedItem))))
+			extractedItems = append(extractedItems, extractedItem)
+		}
+
+		for i := 0; i < maxItems; i++ {
+			for j, extractedItem := range extractedItems {
+				var text = ""
+				var borderStr = ""
+
+				if i < len(extractedItem) {
+					text = extractedItem[i]
+				}
+
+				if i == maxItems-1 {
+					borderStr = "B"
+				}
+
+				core.PrintPdfTextFormatted(text, "", alignStrings[j], borderStr, false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[j])
+			}
+			core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
+		}
 	}
 }
 

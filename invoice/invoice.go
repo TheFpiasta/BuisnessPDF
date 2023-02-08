@@ -209,7 +209,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		[]float64{getCellWith(11), getCellWith(11), getCellWith(40), getCellWith(8), getCellWith(15), getCellWith(15)},
 		[][]string{
 			{"1", "50,00", "Softwareentwicklung", "0%", "40,00€", "2.000,00€"},
-			{"2", "25,00", "agiles Software-Testing,\n System-Monitoring", "0%", "30,00€", "750,00€"},
+			{"2", "25,00", "agiles Software-Testing,\n System-Monitoring, \n Programmierung", "0%", "30,00€", "750,00€"},
 		},
 		[][2]string{
 			{"Zwischensumme", "2.000,00€"},
