@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-// NewPDFGenerator create a new PDFGenerator instance.
+// NewPDFGenerator create and return a new PDFGenerator instance.
+// MetaData is used for all necessary inputs.
 func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
 	gen = new(PDFGenerator)
 
@@ -31,16 +32,30 @@ func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
 	return
 }
 
+// SetCursor set the abscissa (x) and ordinate (y) reference point
+// in the unit of measure specified in NewPDFGenerator() for the next operation.
+// If the passed values are negative, they are relative respectively to the right and bottom of the page.
 func (core *PDFGenerator) SetCursor(x float64, y float64) {
 	core.pdf.SetXY(x, y)
 }
 
-// PrintPdfText
+// PrintPdfText prints from the current cursor position a simple text cell in the PDF.
 //
-//	text		the text to write
-//	styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
-//	textSize	the text size
-//	alignStr	"L" right, "C" center, "R" right
+// text passed the string to print.
+//
+// styleStr defined the font style:
+//
+//	"" non-specific font style
+//	"l" light font
+//	"i" italic font
+//	"b" bold font
+//	"m" medium font
+//
+// alignStr set the align mode:
+//
+//	"L" align the left side of the text to the current cursor position
+//	"R" align the right side of the text to the current cursor position
+//	"C" align the center of the text to the current cursor position
 func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr string) {
 	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
 	_, lineHeight := core.pdf.GetFontSize()
@@ -64,14 +79,25 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 	}
 }
 
-// PrintLnPdfText
+// PrintLnPdfText prints from the current cursor position a simple text cell in the PDF
+// and call NewLine() at the end.
 //
-//	 prints a line with line break
+// text passed the string to print.
+// Use \n escape character to trigger NewLine() inside the text.
 //
-//		text		the text to print
-//		styleStr	"" default, "l" light, "i" italic, "b" bold, "m" medium
-//		textSize	the text size
-//		alignStr	"L" right, "C" center, "R" right
+// styleStr defined the font style:
+//
+//	"" non-specific font style
+//	"l" light font
+//	"i" italic font
+//	"b" bold font
+//	"m" medium font
+//
+// alignStr set the align mode:
+//
+//	"L" align the left side of the text to the current cursor position
+//	"R" align the right side of the text to the current cursor position
+//	"C" align the center of the text to the current cursor position
 func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr string) {
 	lines := core.extractLinesFromText(text)
 	currentX := core.pdf.GetX()

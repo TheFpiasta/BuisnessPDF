@@ -2,6 +2,7 @@ package generator
 
 import "github.com/jung-kurt/gofpdf"
 
+// PDFGenerator define the instance
 type PDFGenerator struct {
 	pdf  *gofpdf.Fpdf
 	data MetaData
@@ -79,6 +80,7 @@ type Generator interface {
 	SetFontSize(textSize float64)
 }
 
+// Color represents a specific color in red, green and blue values, each from 0 to 255
 type Color struct {
 	R uint8
 	G uint8
