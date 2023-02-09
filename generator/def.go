@@ -7,6 +7,36 @@ type PDFGenerator struct {
 	data MetaData
 }
 
+// MetaData sums all necessary inputs for NewPDFGenerator().
+//
+// LineHeight defined the total height of a text line in the Unit of measure.
+//
+// FontName define font familie used to print character strings. Standard families (case insensitive):
+//
+//	"Courier" for fixed-width,
+//	"Helvetica" or "Arial" for sans serif,
+//	"Times" for serif,
+//	"Symbol" or "ZapfDingbats" for symbolic.
+//	"OpenSans" for TrueType support with utf-8 symbols.
+//
+// FontGapY defined the gap between two text lines in the Unit of measure.
+//
+// FontSize defined the font size measured in points.
+//
+// MarginLeft defined the left page margin in the Unit of measure.
+//
+// MarginTop defined the top page margin in the Unit of measure.
+//
+// MarginRight defined the right page margin in the Unit of measure.
+// If the value is less than zero, it is set to the same as the left margin.
+//
+// Unit specifies the unit of length used in size parameters for elements other than fonts,
+// which are always measured in points. An empty string will be replaced with "mm". Specify
+//
+//	"pt" for point,
+//	"mm" for millimeter,
+//	"cm" for centimeter, or
+//	"in" for inch.
 type MetaData struct {
 	LineHeight  float64
 	FontName    string
@@ -18,6 +48,7 @@ type MetaData struct {
 	Unit        string
 }
 
+// Generator specify all public methods.
 type Generator interface {
 	PrintPdfText(text string, styleStr string, alignStr string)
 	PrintLnPdfText(text string, styleStr string, alignStr string)
@@ -36,7 +67,7 @@ type Generator interface {
 	NewLine(oldX float64)
 
 	GetLineHeight() float64
-	GetTextFont() string
+	GetFontName() string
 	GetMarginLeft() float64
 	GetFontGapY() float64
 	GetMarginTop() float64

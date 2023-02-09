@@ -8,16 +8,17 @@ import (
 	"strings"
 )
 
+// NewPDFGenerator create a new PDFGenerator instance.
 func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
 	gen = new(PDFGenerator)
 
 	pdf := gofpdf.New("P", data.Unit, "A4", "")
 
-	pdf.AddUTF8Font(data.FontName, "", "fonts/OpenSans-Regular.ttf")
-	pdf.AddUTF8Font(data.FontName, "l", "fonts/OpenSans-Light.ttf")
-	pdf.AddUTF8Font(data.FontName, "i", "fonts/OpenSans-Italic.ttf")
-	pdf.AddUTF8Font(data.FontName, "b", "fonts/OpenSans-Bold.ttf")
-	pdf.AddUTF8Font(data.FontName, "m", "fonts/OpenSans-Medium.ttf")
+	pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
+	pdf.AddUTF8Font("OpenSans", "l", "fonts/OpenSans-Light.ttf")
+	pdf.AddUTF8Font("OpenSans", "i", "fonts/OpenSans-Italic.ttf")
+	pdf.AddUTF8Font("OpenSans", "b", "fonts/OpenSans-Bold.ttf")
+	pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
 	pdf.SetHomeXY()
