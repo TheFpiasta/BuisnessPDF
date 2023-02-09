@@ -165,14 +165,14 @@ func (core *PDFGenerator) PlaceImgOnPosXY(logoUrl string, posX int, posY int) (e
 	return core.pdf.Error()
 }
 
-func (core *PDFGenerator) PrintInvoiceTable(header []string, columnWidth []float64, items [][]string, summary [][]string, summaryWidths []float64, itemsAlignString []string) {
+//func (core *PDFGenerator) PrintInvoiceTable(header []string, columnWidth []float64, items [][]string, summary [][]string, summaryWidths []float64, itemsAlignString []string) {
+//
+//	core.PrintTableHeader(header, columnWidth)
+//	core.PrintTableRows(items, columnWidth, itemsAlignString)
+//	core.PrintTableFooter(summary, summaryWidths)
+//}
 
-	core.printTableHeader(header, columnWidth)
-	core.printTableRows(items, columnWidth, itemsAlignString)
-	core.printTableFooter(summary, summaryWidths)
-}
-
-func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float64) {
+func (core *PDFGenerator) PrintTableHeader(header []string, columnWidth []float64) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -184,7 +184,7 @@ func (core *PDFGenerator) printTableHeader(header []string, columnWidth []float6
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) printTableRows(items [][]string, columnWidth []float64, alignStrings []string) {
+func (core *PDFGenerator) PrintTableRows(items [][]string, columnWidth []float64, alignStrings []string) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -223,7 +223,7 @@ func (core *PDFGenerator) printTableRow(extractedLines [][]string, currentLine i
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) printTableFooter(items [][]string, summaryWidths []float64) {
+func (core *PDFGenerator) PrintTableFooter(items [][]string, summaryWidths []float64, alignStrings []string) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -232,6 +232,7 @@ func (core *PDFGenerator) printTableFooter(items [][]string, summaryWidths []flo
 		boarderStr := ""
 		fill := false
 		styleStr := ""
+
 		if len(items)-1 == i {
 			boarderStr = "BT"
 			fill = true
@@ -240,12 +241,9 @@ func (core *PDFGenerator) printTableFooter(items [][]string, summaryWidths []flo
 
 		for j, cell := range row {
 			if cell == "" {
-				core.PrintPdfTextFormatted(row[j], "", "LM", "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[0])
-			} else if j == len(row)-1 {
-				core.PrintPdfTextFormatted(row[j], styleStr, "RM", boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[2])
+				core.PrintPdfTextFormatted(row[j], "", alignStrings[j], "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[j])
 			} else {
-				core.PrintPdfTextFormatted(row[j], styleStr, "LM", boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[1])
-
+				core.PrintPdfTextFormatted(row[j], styleStr, alignStrings[j], boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[j])
 			}
 		}
 
