@@ -211,13 +211,13 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 			{"1", "50,00", "Softwareentwicklung", "0%", "40,00€", "2.000,00€"},
 			{"2", "25,00", "agiles Software-Testing,\n System-Monitoring, \n Programmierung", "0%", "30,00€", "750,00€"},
 		},
-		[][2]string{
-			{"Zwischensumme", "2.000,00€"},
-			{"USt. 19%", "0€"},
-			{"USt. 7%", "0€"},
-			{"Gesamtbetrag", "2.000,00€"},
+		[][]string{
+			{"", "Zwischensumme", "2.000,00€"},
+			{"", "USt. 19%", "0€"},
+			{"", "USt. 7%", "0€"},
+			{"", "Gesamtbetrag", "2.000,00€"},
 		},
-		[3]float64{getCellWith(60), getCellWith(25), getCellWith(15)},
+		[]float64{getCellWith(60), getCellWith(25), getCellWith(15)},
 		[]string{"LM", "LM", "LM", "LM", "RM", "RM"},
 	)
 
