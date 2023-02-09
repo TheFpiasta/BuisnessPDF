@@ -56,7 +56,7 @@ type Generator interface {
 	DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64)
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
 	PlaceImgOnPosXY(logoUrl string, posX int, posY int) (err error)
-	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, lineHeight float64, stringWidth float64)
+	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
 
 	PrintTableHeader(cells []string, columnWidth []float64)
 	PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string)

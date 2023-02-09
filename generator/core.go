@@ -108,12 +108,16 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	}
 }
 
+// NewLine sets the cursor on the next line dependent on the given X-position
+// (mostly use the start X-point of the current line)
 func (core *PDFGenerator) NewLine(oldX float64) {
 	_, lineHeight := core.pdf.GetFontSize()
 	newY := core.pdf.GetY() + lineHeight + core.data.FontGapY
 	core.pdf.SetXY(oldX, newY)
 }
 
+// extractLinesFromText split a string on newline character (\n) and return the parts as an array.
+// Prefixing whitespaces (ONLY " ")! will be automatically removed on each part.
 func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string) {
 	textLines = strings.Split(text, "\n")
 
@@ -135,25 +139,28 @@ func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string)
 	return textLines
 }
 
-// PrintPdfTextFormatted
+// PrintPdfTextFormatted prints from the current cursor position a formatted text cell in the PDF
+// (e.g. with boarders or background color).
 //
-//	text
+// text passed the string to print.
 //
-//	styleStr
+// styleStr
 //
-//	alignStr
+// alignStr
 //
-//	borderStr: specifies how the cell border will be drawn. An empty string indicates no border, "1" indicates a full border, and one or more of "L", "T", "R" and "B" indicate the left, top, right and bottom sides of the border.
+// borderStr: specifies how the cell border will be drawn. An empty string indicates no border, "1" indicates a full border, and one or more of "L", "T", "R" and "B" indicate the left, top, right and bottom sides of the border.
 //
-//	fill: is true to paint the cell background or false to leave it transparent.
+// fill: is true to paint the cell background or false to leave it transparent.
 //
 //	backgroundColor
-func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, lineHeight float64, stringWidth float64) {
+//
+// lineHeight
+//
+// stringWidth
+func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64) {
 	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
-	//stringWidth := core.pdf.GetStringWidth(text) + 2
-
 	core.pdf.SetFillColor(int(backgroundColor.R), int(backgroundColor.G), int(backgroundColor.B))
-	core.pdf.CellFormat(stringWidth, lineHeight, text, borderStr, 0, alignStr, fill, 0, "")
+	core.pdf.CellFormat(cellWidth, cellHeight, text, borderStr, 0, alignStr, fill, 0, "")
 }
 
 func (core *PDFGenerator) DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64) {
