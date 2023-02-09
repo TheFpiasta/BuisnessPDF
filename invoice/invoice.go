@@ -221,7 +221,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
 	pdfGen.PrintTableHeader(headerCells, columnWidth)
-	pdfGen.PrintTableRows(bodyText, columnWidth, bodyCellAlign)
+	pdfGen.PrintTableBody(bodyText, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()

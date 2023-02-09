@@ -25,7 +25,10 @@ type Generator interface {
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
 	PlaceImgOnPosXY(logoUrl string, posX int, posY int) (err error)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, lineHeight float64, stringWidth float64)
-	PrintInvoiceTable(header []string, columnWidth []float64, items [][]string, summary [][2]string, summaryWidths [3]float64, itemsAlignString []string)
+
+	PrintTableHeader(cells []string, columnWidth []float64)
+	PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string)
+	PrintTableFooter(cells [][]string, columnWidths []float64, columnAlignStrings []string)
 
 	GetError() error
 	GetPdf() *gofpdf.Fpdf

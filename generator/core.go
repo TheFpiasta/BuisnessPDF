@@ -165,42 +165,35 @@ func (core *PDFGenerator) PlaceImgOnPosXY(logoUrl string, posX int, posY int) (e
 	return core.pdf.Error()
 }
 
-//func (core *PDFGenerator) PrintInvoiceTable(header []string, columnWidth []float64, items [][]string, summary [][]string, summaryWidths []float64, itemsAlignString []string) {
-//
-//	core.PrintTableHeader(header, columnWidth)
-//	core.PrintTableRows(items, columnWidth, itemsAlignString)
-//	core.PrintTableFooter(summary, summaryWidths)
-//}
-
-func (core *PDFGenerator) PrintTableHeader(header []string, columnWidth []float64) {
+func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
-	for i, text := range header {
-		core.PrintPdfTextFormatted(text, "b", "LM", "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
+	for i, cell := range cells {
+		core.PrintPdfTextFormatted(cell, "b", "LM", "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
 	}
 
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) PrintTableRows(items [][]string, columnWidth []float64, alignStrings []string) {
+func (core *PDFGenerator) PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
-	for _, item := range items {
+	for _, row := range cells {
 		var extractedLines [][]string
 		var maxLines = 0
 
-		for _, cell := range item {
+		for _, cell := range row {
 			extractedItem := core.extractLinesFromText(cell)
 			maxLines = int(math.Max(float64(maxLines), float64(len(extractedItem))))
 			extractedLines = append(extractedLines, extractedItem)
 		}
 
 		for i := 0; i < maxLines; i++ {
-			core.printTableRow(extractedLines, i, maxLines, alignStrings, newlineHeight, columnWidth, referenceX)
+			core.printTableRow(extractedLines, i, maxLines, columnAlignStrings, newlineHeight, columnWidths, referenceX)
 		}
 	}
 }
@@ -223,17 +216,17 @@ func (core *PDFGenerator) printTableRow(extractedLines [][]string, currentLine i
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 }
 
-func (core *PDFGenerator) PrintTableFooter(items [][]string, summaryWidths []float64, alignStrings []string) {
+func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []float64, columnAlignStrings []string) {
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
-	for i, row := range items {
+	for i, row := range cells {
 		boarderStr := ""
 		fill := false
 		styleStr := ""
 
-		if len(items)-1 == i {
+		if len(cells)-1 == i {
 			boarderStr = "BT"
 			fill = true
 			styleStr = "B"
@@ -241,9 +234,9 @@ func (core *PDFGenerator) PrintTableFooter(items [][]string, summaryWidths []flo
 
 		for j, cell := range row {
 			if cell == "" {
-				core.PrintPdfTextFormatted(row[j], "", alignStrings[j], "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[j])
+				core.PrintPdfTextFormatted(row[j], "", columnAlignStrings[j], "", false, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidths[j])
 			} else {
-				core.PrintPdfTextFormatted(row[j], styleStr, alignStrings[j], boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, summaryWidths[j])
+				core.PrintPdfTextFormatted(row[j], styleStr, columnAlignStrings[j], boarderStr, fill, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidths[j])
 			}
 		}
 
