@@ -144,19 +144,33 @@ func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string)
 //
 // text passed the string to print.
 //
-// styleStr
+// styleStr defined the font style:
 //
-// alignStr
+//	 "" non-specific font style
+//		"l" light font
+//		"i" italic font
+//		"b" bold font
+//		"m" medium font
 //
-// borderStr: specifies how the cell border will be drawn. An empty string indicates no border, "1" indicates a full border, and one or more of "L", "T", "R" and "B" indicate the left, top, right and bottom sides of the border.
+// alignStr set the align mode:
 //
-// fill: is true to paint the cell background or false to leave it transparent.
+//	"L" align the left side of the text to the current cursor position
+//	"R" align the right side of the text to the current cursor position
+//	"C" align the center of the text to the current cursor position
 //
-//	backgroundColor
+// borderStr specifies how the cell border will be drawn:
 //
-// lineHeight
+//	An empty string indicates no border,
+//	"1" indicates a full border,
+//	one or more of "L", "T", "R" and "B" indicate the left, top, right and bottom sides of the border.
 //
-// stringWidth
+// fill TODO refactor to nil backgroundColor
+//
+// backgroundColor
+//
+// cellHeight
+//
+// cellWidth
 func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64) {
 	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
 	core.pdf.SetFillColor(int(backgroundColor.R), int(backgroundColor.G), int(backgroundColor.B))
