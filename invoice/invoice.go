@@ -6,6 +6,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"io"
+	"net/url"
 )
 
 type Invoice struct {
@@ -141,7 +142,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 
-	err := pdfGen.PlaceImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	urlStruct, err := url.Parse("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png")
+	if err != nil {
+		return iv.pdf, err
+	}
+
+	err = pdfGen.PlaceImageFromUrl(urlStruct, 153, 20, 0.5)
 	if err != nil {
 		return iv.pdf, err
 	}
