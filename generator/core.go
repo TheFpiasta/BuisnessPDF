@@ -2,6 +2,7 @@ package generator
 
 import (
 	"errors"
+	"fmt"
 	"github.com/jung-kurt/gofpdf"
 	"math"
 	"net/http"
@@ -10,8 +11,14 @@ import (
 )
 
 // NewPDFGenerator create and return a new PDFGenerator instance.
+//
 // MetaData is used for all necessary inputs.
-func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
+//
+// Set strictErrorHandling to true, to provide execution of any method, if a pdf internal error is set.
+// If strictErrorHandling is set to false, all methods are tried to execute executed, even if a pdf internal error is set.
+// This may cause the PDF internal error to be overwritten by a new error.
+// Use GetError() to get the current pdf internal error.
+func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator) {
 	gen = new(PDFGenerator)
 
 	pdf := gofpdf.New("P", data.Unit, "A4", "")
@@ -29,14 +36,55 @@ func NewPDFGenerator(data MetaData) (gen *PDFGenerator) {
 
 	gen.pdf = pdf
 	gen.data = data
+	gen.strictError = strictErrorHandling
+
+	pageWidth, pageHeight := gen.pdf.GetPageSize()
+	gen.maxSaveX = pageWidth - data.MarginRight
+	gen.maxSaveY = pageHeight - data.MarginBottom
 
 	return
 }
 
-// SetCursor set the abscissa (x) and ordinate (y) reference point
+// SetCursor set manual the abscissa (x) and ordinate (y) reference point
 // in the unit of measure specified in NewPDFGenerator() for the next operation.
-// If the passed values are negative, they are relative respectively to the right and bottom of the page.
+// The position must be inside the writing area, restricted by the defined margins in NewPDFGenerator()
 func (core *PDFGenerator) SetCursor(x float64, y float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
+	if x < core.data.MarginLeft || x > core.maxSaveX {
+		core.pdf.SetError(errors.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, core.data.MarginLeft, core.maxSaveX)))
+		return
+	}
+
+	if y < core.data.MarginTop || y > core.maxSaveY {
+		core.pdf.SetError(errors.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, core.data.MarginTop, core.maxSaveY)))
+		return
+	}
+
+	core.pdf.SetXY(x, y)
+}
+
+// SetUnsafeCursor set manual the abscissa (x) and ordinate (y) reference point
+// in the unit of measure specified in NewPDFGenerator() for the next operation.
+// The position must be inside the page area, restricted by the page size.
+func (core *PDFGenerator) SetUnsafeCursor(x float64, y float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
+	pageWidth, pageHeight := core.pdf.GetPageSize()
+	if x < 0 || x > pageWidth {
+		core.pdf.SetError(errors.New(fmt.Sprintf("New cursor position x = %f is out of range [0, %f]!", x, pageWidth)))
+		return
+	}
+
+	if y < 0 || y > pageHeight {
+		core.pdf.SetError(errors.New(fmt.Sprintf("New cursor position y = %f is out of range [0, %f]!", y, pageHeight)))
+		return
+	}
+
 	core.pdf.SetXY(x, y)
 }
 
@@ -58,6 +106,10 @@ func (core *PDFGenerator) SetCursor(x float64, y float64) {
 //	"R" align the right side of the text to the current cursor position
 //	"C" align the center of the text to the current cursor position
 func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr string) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
 	_, lineHeight := core.pdf.GetFontSize()
 	stringWidth := core.pdf.GetStringWidth(text) + 2
@@ -100,6 +152,10 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 //	"R" align the right side of the text to the current cursor position
 //	"C" align the center of the text to the current cursor position
 func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr string) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	lines := core.extractLinesFromText(text)
 	currentX := core.pdf.GetX()
 
@@ -112,6 +168,10 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 // NewLine sets the cursor on the next line dependent on the given X-position
 // (mostly use the start X-point of the current line)
 func (core *PDFGenerator) NewLine(oldX float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	_, lineHeight := core.pdf.GetFontSize()
 	newY := core.pdf.GetY() + lineHeight + core.data.FontGapY
 	core.pdf.SetXY(oldX, newY)
@@ -173,6 +233,10 @@ func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string)
 //
 // cellWidth specifies the total width of the cell in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	core.pdf.SetFont(core.data.FontName, styleStr, core.GetFontSize())
 	if fill {
 		core.pdf.SetFillColor(int(backgroundColor.R), int(backgroundColor.G), int(backgroundColor.B))
@@ -190,6 +254,10 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 //
 // lineWith specifies the thinness of the line in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	core.pdf.SetLineWidth(lineWith)
 	core.pdf.SetDrawColor(int(color.R), int(color.G), int(color.B))
 	core.pdf.Line(x1, y1, x2, y2)
@@ -206,6 +274,10 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 // E.g. a value of 0.5 means draw the image in half the size of the original
 // and a value of 3 means draw the image in the triple size of the original.
 func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	//TODO scale of (0, ...] abfangen
 
 	var rsp *http.Response
@@ -232,6 +304,10 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, p
 //
 // columnWidth defines the width of each column. NOTE: in general use here the same widths as in PrintTableBody()
 func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -259,6 +335,10 @@ func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64
 //
 // E.g. in an invoice table, typically use "L" for all strings and "R" for salary.
 func (core *PDFGenerator) PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2
@@ -337,6 +417,10 @@ func (core *PDFGenerator) printTableBodyRow(extractedLines [][]string, currentLi
 //
 // E.g. in an invoice table, typically use "L" for all strings and "R" for salary.
 func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []float64, columnAlignStrings []string) {
+	if core.strictError == true && core.pdf.Error() != nil {
+		return
+	}
+
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
 	newlineHeight := lineHeight + core.data.FontGapY*2

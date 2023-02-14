@@ -20,6 +20,7 @@ type Invoice struct {
 	marginLeft    float64
 	marginRight   float64
 	marginTop     float64
+	marginBottom  float64
 	fontGapY      float64
 }
 
@@ -95,11 +96,12 @@ type invoicedSum struct {
 func New(logger *zerolog.Logger) (iv *Invoice) {
 
 	iv = &Invoice{
-		logger:      logger,
-		textFont:    "openSans",
-		marginLeft:  25,
-		marginRight: 20,
-		marginTop:   45,
+		logger:       logger,
+		textFont:     "openSans",
+		marginLeft:   25,
+		marginRight:  20,
+		marginTop:    45,
+		marginBottom: 10,
 	}
 
 	return iv
@@ -130,15 +132,16 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	const headerFontSize = 16
 
 	pdfGen := generator.NewPDFGenerator(generator.MetaData{
-		LineHeight:  5,
-		FontName:    "openSans",
-		FontGapY:    1.5,
-		FontSize:    defaultFontSize,
-		MarginLeft:  iv.marginLeft,
-		MarginTop:   iv.marginTop,
-		MarginRight: iv.marginRight,
-		Unit:        "mm",
-	})
+		LineHeight:   5,
+		FontName:     "openSans",
+		FontGapY:     1.5,
+		FontSize:     defaultFontSize,
+		MarginLeft:   iv.marginLeft,
+		MarginTop:    iv.marginTop,
+		MarginRight:  iv.marginRight,
+		MarginBottom: iv.marginBottom,
+		Unit:         "mm",
+	}, false)
 
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 

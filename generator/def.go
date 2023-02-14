@@ -7,8 +7,11 @@ import (
 
 // PDFGenerator define the instance
 type PDFGenerator struct {
-	pdf  *gofpdf.Fpdf
-	data MetaData
+	pdf         *gofpdf.Fpdf
+	data        MetaData
+	maxSaveX    float64
+	maxSaveY    float64
+	strictError bool
 }
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
@@ -71,19 +74,20 @@ type Generator interface {
 	GetError() error
 	GetPdf() *gofpdf.Fpdf
 	SetCursor(x float64, y float64)
+	SetUnsafeCursor(x float64, y float64)
 	NewLine(oldX float64)
 
 	GetLineHeight() float64
 	SetLineHeight(lineHeight float64)
 	GetFontName() string
-	GetMarginLeft() float64
 	GetFontGapY() float64
 	SetFontGapY(fontGapY float64)
+	GetMarginLeft() float64
 	GetMarginTop() float64
 	GetMarginRight() float64
-	GetMarginBottom() float64
 	GetFontSize() float64
 	SetFontSize(textSize float64)
+	GetMarginBottom() float64
 }
 
 // Color represents a specific color in red, green and blue values, each from 0 to 255
