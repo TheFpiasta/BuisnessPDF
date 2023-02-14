@@ -147,7 +147,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return iv.pdf, err
 	}
 
-	err = pdfGen.PlaceImageFromUrl(urlStruct, 153, 20, 0.5)
+	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 20, 0.5)
 	if err != nil {
 		return iv.pdf, err
 	}

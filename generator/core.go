@@ -205,7 +205,7 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 	core.pdf.Line(x1, y1, x2, y2)
 }
 
-// PlaceImageFromUrl downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL and puts it in the current page.
+// PlaceMimeImageFromUrl downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL and puts it in the current page.
 //
 // cdnUrl specifies a parsed (CDN) URL.
 //
@@ -215,22 +215,22 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 // The value must be grater then 0. Use scaling of 1 for no scaling.
 // E.g. a value of 0.5 means draw the image in half the size of the original
 // and a value of 3 means draw the image in the triple size of the original.
-func (core *PDFGenerator) PlaceImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error) {
+func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error) {
 	//TODO scale of (0, ...] abfangen
 
 	var rsp *http.Response
 
-	rsp, err = http.Get(cdnUrl.RequestURI())
+	rsp, err = http.Get(cdnUrl.String())
 	if err != nil {
 		core.pdf.SetError(err)
 		return core.pdf.Error()
 	}
 
 	imageMimeType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
-	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.RequestURI(), imageMimeType, rsp.Body)
+	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.String(), imageMimeType, rsp.Body)
 	if core.pdf.Ok() {
 		imgWd, imgHt := imageInfoType.Extent()
-		core.pdf.Image(cdnUrl.RequestURI(), posX, posY, imgWd*scale, imgHt*scale, false, imageMimeType, 0, "")
+		core.pdf.Image(cdnUrl.String(), posX, posY, imgWd*scale, imgHt*scale, false, imageMimeType, 0, "")
 	}
 
 	return core.pdf.Error()
