@@ -180,16 +180,6 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 	core.pdf.CellFormat(cellWidth, cellHeight, text, borderStr, 0, alignStr, fill, 0, "")
 }
 
-//// DrawPdfTextRightAligned is a deprecated method to write text right aligned
-////
-//func (core *PDFGenerator) DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64) {
-//	core.pdf.SetFont(core.data.FontName, styleStr, textSize)
-//	stringWidth := core.pdf.GetStringWidth(text) + 2
-//	core.pdf.SetXY(posXRight-stringWidth, posY)
-//	core.pdf.WriteAligned(core.pdf.GetStringWidth(text), core.data.LineHeight, text, "R")
-//	core.pdf.Cell(elementWith, elementHeight, text)
-//}
-
 // DrawLine draw a user defines line between two points.
 //
 // x1 and y1 defines the abscissa (x) and ordinate (y) cursor start point.
@@ -372,4 +362,9 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 
 		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 	}
+}
+
+func (core *PDFGenerator) addNewPageIfNecessary() {
+	//var currentYPos float64
+	//var maxSaveYPos float64
 }

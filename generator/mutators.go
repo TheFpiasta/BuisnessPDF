@@ -19,6 +19,11 @@ func (core *PDFGenerator) GetLineHeight() float64 {
 	return core.data.LineHeight
 }
 
+// SetLineHeight change the line height in the unit of measure specified in NewPDFGenerator().
+func (core *PDFGenerator) SetLineHeight(lineHeight float64) {
+	core.data.LineHeight = lineHeight
+}
+
 // GetFontName returns the specified font name in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) GetFontName() string {
 	return core.data.FontName
@@ -39,24 +44,24 @@ func (core *PDFGenerator) GetMarginRight() float64 {
 	return core.data.MarginRight
 }
 
+// GetMarginBottom returns the specified bottom margin in the unit of measure specified in NewPDFGenerator().
+func (core *PDFGenerator) GetMarginBottom() float64 {
+	return core.data.MarginBottom
+}
+
 // GetFontGapY returns the specified gap between two lines in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) GetFontGapY() float64 {
 	return core.data.FontGapY
 }
 
-// GetFontSize returns the current font size in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) GetFontSize() float64 {
-	return core.data.FontSize
-}
-
-// SetLineHeight change the line height in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) SetLineHeight(lineHeight float64) {
-	core.data.LineHeight = lineHeight
-}
-
 // SetFontGapY change the gap between two lines in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) SetFontGapY(fontGapY float64) {
 	core.data.FontGapY = fontGapY
+}
+
+// GetFontSize returns the current font size in the unit of measure specified in NewPDFGenerator().
+func (core *PDFGenerator) GetFontSize() float64 {
+	return core.data.FontSize
 }
 
 // SetFontSize change the font size in the unit of measure specified in NewPDFGenerator().

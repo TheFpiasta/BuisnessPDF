@@ -1,6 +1,9 @@
 package generator
 
-import "github.com/jung-kurt/gofpdf"
+import (
+	"github.com/jung-kurt/gofpdf"
+	"net/url"
+)
 
 // PDFGenerator define the instance
 type PDFGenerator struct {
@@ -10,7 +13,7 @@ type PDFGenerator struct {
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
 //
-// LineHeight defined the total height of a text line in the Unit of measure.
+// LineHeight defines the total height of a text line in the Unit of measure.
 //
 // FontName define font familie used to print character strings. Standard families (case insensitive):
 //
@@ -20,16 +23,19 @@ type PDFGenerator struct {
 //	"Symbol" or "ZapfDingbats" for symbolic.
 //	"OpenSans" for TrueType support with utf-8 symbols.
 //
-// FontGapY defined the gap between two text lines in the Unit of measure.
+// FontGapY defines the gap between two text lines in the Unit of measure.
 //
-// FontSize defined the font size measured in points.
+// FontSize defines the font size measured in points.
 //
-// MarginLeft defined the left page margin in the Unit of measure.
+// MarginLeft defines the left page margin in the Unit of measure.
 //
-// MarginTop defined the top page margin in the Unit of measure.
+// MarginTop defines the top page margin in the Unit of measure.
 //
-// MarginRight defined the right page margin in the Unit of measure.
+// MarginRight defines the right page margin in the Unit of measure.
 // If the value is less than zero, it is set to the same as the left margin.
+//
+// MarginBottom defines the bottom page margin in the Unit of measure.
+// On top of the bottom margin is the footer section.
 //
 // Unit specifies the unit of length used in size parameters for elements other than fonts,
 // which are always measured in points. An empty string will be replaced with "mm". Specify
@@ -39,23 +45,23 @@ type PDFGenerator struct {
 //	"cm" for centimeter, or
 //	"in" for inch.
 type MetaData struct {
-	LineHeight  float64
-	FontName    string
-	FontGapY    float64
-	FontSize    float64
-	MarginLeft  float64
-	MarginTop   float64
-	MarginRight float64
-	Unit        string
+	LineHeight   float64
+	FontName     string
+	FontGapY     float64
+	FontSize     float64
+	MarginLeft   float64
+	MarginTop    float64
+	MarginRight  float64
+	MarginBottom float64
+	Unit         string
 }
 
 // Generator specify all public methods.
 type Generator interface {
 	PrintPdfText(text string, styleStr string, alignStr string)
 	PrintLnPdfText(text string, styleStr string, alignStr string)
-	DrawPdfTextRightAligned(posXRight float64, posY float64, text string, styleStr string, textSize float64, elementWith float64, elementHeight float64)
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
-	PlaceImgOnPosXY(logoUrl string, posX int, posY int) (err error)
+	PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
 
 	PrintTableHeader(cells []string, columnWidth []float64)
@@ -68,15 +74,15 @@ type Generator interface {
 	NewLine(oldX float64)
 
 	GetLineHeight() float64
+	SetLineHeight(lineHeight float64)
 	GetFontName() string
 	GetMarginLeft() float64
 	GetFontGapY() float64
+	SetFontGapY(fontGapY float64)
 	GetMarginTop() float64
 	GetMarginRight() float64
+	GetMarginBottom() float64
 	GetFontSize() float64
-
-	SetLineHeight(lineHeight float64)
-	SetFontGapY(fontGapY float64)
 	SetFontSize(textSize float64)
 }
 
