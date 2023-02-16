@@ -33,6 +33,7 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
 	pdf.SetHomeXY()
+	pdf.SetAutoPageBreak(true, data.MarginBottom)
 	//iv.pdf.AliasNbPages("{entute}")
 	pdf.AddPage()
 

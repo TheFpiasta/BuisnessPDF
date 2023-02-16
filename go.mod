@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/rs/zerolog v1.28.0
+	golang.org/x/text v0.3.0
 )
 
 require (
