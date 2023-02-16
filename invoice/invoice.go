@@ -131,8 +131,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	const smallFontSize = 8
 	const headerFontSize = 16
 
-	pdfGen := generator.NewPDFGenerator(generator.MetaData{
-		LineHeight:   5,
+	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
 		FontName:     "openSans",
 		FontGapY:     1.5,
 		FontSize:     defaultFontSize,
