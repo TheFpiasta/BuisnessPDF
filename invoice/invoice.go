@@ -6,6 +6,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"io"
+	"net/url"
 )
 
 type Invoice struct {
@@ -19,6 +20,7 @@ type Invoice struct {
 	marginLeft    float64
 	marginRight   float64
 	marginTop     float64
+	marginBottom  float64
 	fontGapY      float64
 }
 
@@ -94,11 +96,12 @@ type invoicedSum struct {
 func New(logger *zerolog.Logger) (iv *Invoice) {
 
 	iv = &Invoice{
-		logger:      logger,
-		textFont:    "openSans",
-		marginLeft:  25,
-		marginRight: 20,
-		marginTop:   45,
+		logger:       logger,
+		textFont:     "openSans",
+		marginLeft:   25,
+		marginRight:  20,
+		marginTop:    45,
+		marginBottom: 10,
 	}
 
 	return iv
@@ -129,19 +132,25 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	const headerFontSize = 16
 
 	pdfGen := generator.NewPDFGenerator(generator.MetaData{
-		LineHeight:  5,
-		FontName:    "openSans",
-		FontGapY:    1.5,
-		FontSize:    defaultFontSize,
-		MarginLeft:  iv.marginLeft,
-		MarginTop:   iv.marginTop,
-		MarginRight: iv.marginRight,
-		Unit:        "mm",
-	})
+		LineHeight:   5,
+		FontName:     "openSans",
+		FontGapY:     1.5,
+		FontSize:     defaultFontSize,
+		MarginLeft:   iv.marginLeft,
+		MarginTop:    iv.marginTop,
+		MarginRight:  iv.marginRight,
+		MarginBottom: iv.marginBottom,
+		Unit:         "mm",
+	}, false)
 
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 
-	err := pdfGen.PlaceImgOnPosXY("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png", 153, 20)
+	urlStruct, err := url.Parse("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png")
+	if err != nil {
+		return iv.pdf, err
+	}
+
+	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 20, 0.5)
 	if err != nil {
 		return iv.pdf, err
 	}
@@ -180,22 +189,49 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("23.04.2023", "", "L")
 
 	//Überschrift
-	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor)
+	pdfGen.DrawLine(iv.marginLeft, 120, pageWidth-iv.marginRight, 120, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 122)
 	pdfGen.SetFontSize(headerFontSize)
-	pdfGen.PrintPdfText("Rechnung - 4", "b", "L")
+	pdfGen.PrintLnPdfText("Rechnung - 4", "b", "L")
+	pdfGen.SetFontSize(defaultFontSize)
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
+
+	pdfGen.PrintLnPdfText("Sehr geehrter Herr Mustermann,", "", "L")
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
+
+	pdfGen.PrintLnPdfText("lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor \n     invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.", "", "L")
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
+
+	pdfGen.SetFontSize(smallFontSize)
+	pdfGen.PrintLnPdfText("Leistungszeitraum: 01.01.1999 - 01.01.2023", "i", "L")
 	pdfGen.SetFontSize(defaultFontSize)
 
-	//Tabelle
-	//type InvoiceItemData struct {
-	//	PositionNumber uint
-	//	Quantity       float64
-	//	Unit           string
-	//	Description    string
-	//	SinglePrice    float64
-	//	NetPrice       float64
-	//}
-	pdfGen.PrintTable([]string{}, []float64{}, [][]string{})
+	getCellWith := func(percent float64) float64 {
+		maxSavePrintingWidth, _ := pdfGen.GetPdf().GetPageSize()
+		maxSavePrintingWidth = maxSavePrintingWidth - pdfGen.GetMarginLeft() - pdfGen.GetMarginRight()
+
+		return (percent * maxSavePrintingWidth) / 100.0
+	}
+
+	var headerCells = []string{"Position", "Anzahl", "Beschreibung", "USt", "Einzelpreis", "Netto"}
+	var columnWidth = []float64{getCellWith(11), getCellWith(11), getCellWith(40), getCellWith(8), getCellWith(15), getCellWith(15)}
+	var bodyText = [][]string{
+		{"1", "50,00", "Softwareentwicklung", "0%", "40,00€", "2.000,00€"},
+		{"2", "25,00", "agiles Software-Testing,\n System-Monitoring, \n Programmierung", "0%", "30,00€", "750,00€"},
+	}
+	var bodyCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
+	var summaryCells = [][]string{
+		{"", "Zwischensumme", "2.000,00€"},
+		{"", "USt. 19%", "0€"},
+		{"", "USt. 7%", "0€"},
+		{"", "Gesamtbetrag", "2.000,00€"},
+	}
+	var summaryColumnWidths = []float64{getCellWith(60), getCellWith(25), getCellWith(15)}
+	var summaryCellAlign = []string{"LM", "LM", "RM"}
+
+	pdfGen.PrintTableHeader(headerCells, columnWidth)
+	pdfGen.PrintTableBody(bodyText, columnWidth, bodyCellAlign)
+	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
