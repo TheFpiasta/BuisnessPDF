@@ -5,13 +5,14 @@ import (
 	"net/url"
 )
 
-// PDFGenerator define the instance
+// PDFGenerator is a light-way PDF document generator witch simplify and enhanced [github.com/jung-kurt/gofpdf].
+// The implemented methods focused primary on creating easy clean invoices or B2B letters.
 type PDFGenerator struct {
-	pdf         *gofpdf.Fpdf
-	data        MetaData
-	maxSaveX    float64
-	maxSaveY    float64
-	strictError bool
+	pdf                 *gofpdf.Fpdf
+	data                MetaData
+	maxSaveX            float64
+	maxSaveY            float64
+	strictErrorHandling bool
 }
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
