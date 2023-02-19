@@ -58,6 +58,8 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 	pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
+	pdf.SetHomeXY()
+	pdf.SetAutoPageBreak(true, data.MarginBottom)
 	//pdf.AliasNbPages("{entute}")
 	pdf.AddPage()
 	pdf.SetHomeXY()
