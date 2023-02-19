@@ -14,16 +14,6 @@ func (core *PDFGenerator) GetError() error {
 	return core.pdf.Error()
 }
 
-// GetLineHeight returns the specified line height in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) GetLineHeight() float64 {
-	return core.data.LineHeight
-}
-
-// SetLineHeight change the line height in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) SetLineHeight(lineHeight float64) {
-	core.data.LineHeight = lineHeight
-}
-
 // GetFontName returns the specified font name in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) GetFontName() string {
 	return core.data.FontName
