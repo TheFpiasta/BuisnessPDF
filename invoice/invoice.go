@@ -10,6 +10,7 @@ import (
 	"io"
 	"math"
 	"net/url"
+	"runtime"
 	"strconv"
 )
 
@@ -291,10 +292,46 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
 	pdfGen.SetFontSize(defaultFontSize)
 
+	//todo refactor
+	if pdfGen.GetError() != nil {
+		iv.handleError(pdfGen.GetError(), "pdf Error")
+	}
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
-	iv.logger.Error().Msgf(err.Error())
+	iv.logger.Error().Msgf(iv.handleStackError(err.Error() + " - " + msg))
 	return fmt.Errorf("ERROR: %s", msg)
+}
+
+// todo refactor to module
+func (iv *Invoice) handleStackError(msg string) (stackTraceError string) {
+	// The maximum number of stack frames on any error.
+	var MaxStackDepth = 50
+
+	var err error
+	var stack = make([]uintptr, MaxStackDepth)
+
+	err = fmt.Errorf("%s", msg)
+
+	length := runtime.Callers(2, stack[:])
+
+	stack = stack[:length]
+	var frames = runtime.CallersFrames(stack)
+	var errMsg string
+
+	errMsg += fmt.Sprintln(err.Error())
+
+	var hasNext = true
+	for hasNext {
+
+		frame, more := frames.Next()
+
+		errMsg += fmt.Sprintln("In: " + frame.File + " -> " + frame.Function + " at line: " + strconv.Itoa(frame.Line))
+		if !more {
+			hasNext = false
+		}
+	}
+
+	return errMsg
 }
