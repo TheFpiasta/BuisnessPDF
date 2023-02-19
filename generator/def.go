@@ -75,8 +75,6 @@ type Generator interface {
 	SetUnsafeCursor(x float64, y float64)
 	NewLine(oldX float64)
 
-	GetLineHeight() float64
-	SetLineHeight(lineHeight float64)
 	GetFontName() string
 	GetFontGapY() float64
 	SetFontGapY(fontGapY float64)
