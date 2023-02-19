@@ -277,11 +277,10 @@ func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string)
 //		"b" bold font
 //		"m" medium font
 //
-// alignStr set the align mode:
+// *alignStr* set the align mode. The default alignment is left middle.
 //
-//	"L" align the left side of the text to the current cursor position
-//	"R" align the right side of the text to the current cursor position
-//	"C" align the center of the text to the current cursor position
+//	Horizontal alignment is controlled by including "L", "C" or "R" (left, center, right) in alignStr.
+//	Vertical alignment is controlled by including "T", "M", "B" or "A" (top, middle, bottom, baseline) in alignStr.
 //
 // borderStr specifies how the cell border will be drawn:
 //
@@ -302,11 +301,13 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 	}
 
 	// --> validate inputs
-	valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
-	if !valideAlignStrs[alignStr] {
-		core.pdf.SetError(errors.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\"!", alignStr)))
-		return
-	}
+
+	//TODO refactor this
+	//valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
+	//if !valideAlignStrs[alignStr] {
+	//	core.pdf.SetError(errors.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\"!", alignStr)))
+	//	return
+	//}
 
 	if cellHeight < 0 {
 		core.pdf.SetError(errors.New(fmt.Sprintf("A negative cellHeight is not allowed!")))
