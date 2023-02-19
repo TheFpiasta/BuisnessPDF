@@ -17,8 +17,6 @@ type PDFGenerator struct {
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
 //
-// LineHeight defines the total height of a text line in the Unit of measure.
-//
 // FontName define font familie used to print character strings. Standard families (case insensitive):
 //
 //	"Courier" for fixed-width,
@@ -49,7 +47,6 @@ type PDFGenerator struct {
 //	"cm" for centimeter, or
 //	"in" for inch.
 type MetaData struct {
-	LineHeight   float64
 	FontName     string
 	FontGapY     float64
 	FontSize     float64
