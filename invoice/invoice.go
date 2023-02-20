@@ -2,7 +2,8 @@ package invoice
 
 import (
 	"SimpleInvoice/generator"
-	"fmt"
+	"errors"
+	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"golang.org/x/text/language"
@@ -10,7 +11,6 @@ import (
 	"io"
 	"math"
 	"net/url"
-	"runtime"
 	"strconv"
 )
 
@@ -27,6 +27,7 @@ type Invoice struct {
 	marginTop     float64
 	marginBottom  float64
 	fontGapY      float64
+	printErrStack bool
 }
 
 type invoicePdfData struct {
@@ -101,12 +102,13 @@ type invoicedSum struct {
 func New(logger *zerolog.Logger) (iv *Invoice) {
 
 	iv = &Invoice{
-		logger:       logger,
-		textFont:     "openSans",
-		marginLeft:   25,
-		marginRight:  20,
-		marginTop:    45,
-		marginBottom: 0,
+		logger:        logger,
+		textFont:      "openSans",
+		marginLeft:    25,
+		marginRight:   20,
+		marginTop:     45,
+		marginBottom:  0,
+		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 	}
 
 	return iv
@@ -115,13 +117,15 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 	err = iv.parseJsonData(jsonData)
 	if err != nil {
-		return iv.handleError(err, "Parsing Data Failed!")
+		iv.LogError(err)
+		return errors.New("data parsing Failed")
 	}
 
 	err = iv.validateJsonData()
 	if err != nil {
 		iv.pdfData = invoicePdfData{}
-		return iv.handleError(err, "Incorrect data!")
+		iv.LogError(err)
+		return errors.New("data parsing Failed")
 	}
 
 	return nil
@@ -292,46 +296,20 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
 	pdfGen.SetFontSize(defaultFontSize)
 
-	//todo refactor
 	if pdfGen.GetError() != nil {
-		iv.handleError(pdfGen.GetError(), "pdf Error")
+		iv.LogError(pdfGen.GetError())
 	}
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
-	iv.logger.Error().Msgf(iv.handleStackError(err.Error() + " - " + msg))
-	return fmt.Errorf("ERROR: %s", msg)
-}
+func (iv *Invoice) LogError(err error) {
+	var errStr string
 
-// todo refactor to module
-func (iv *Invoice) handleStackError(msg string) (stackTraceError string) {
-	// The maximum number of stack frames on any error.
-	var MaxStackDepth = 50
-
-	var err error
-	var stack = make([]uintptr, MaxStackDepth)
-
-	err = fmt.Errorf("%s", msg)
-
-	length := runtime.Callers(2, stack[:])
-
-	stack = stack[:length]
-	var frames = runtime.CallersFrames(stack)
-	var errMsg string
-
-	errMsg += fmt.Sprintln(err.Error())
-
-	var hasNext = true
-	for hasNext {
-
-		frame, more := frames.Next()
-
-		errMsg += fmt.Sprintln("In: " + frame.File + " -> " + frame.Function + " at line: " + strconv.Itoa(frame.Line))
-		if !more {
-			hasNext = false
-		}
+	if _, ok := err.(*errorsWithStack.Error); ok && iv.printErrStack {
+		errStr = err.(*errorsWithStack.Error).ErrorStack()
+	} else {
+		errStr = err.Error()
 	}
 
-	return errMsg
+	iv.logger.Error().Msgf(errStr)
 }
