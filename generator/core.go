@@ -61,6 +61,8 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 	pdf.SetHomeXY()
 	pdf.SetAutoPageBreak(true, data.MarginBottom)
 	//pdf.AliasNbPages("{entute}")
+	//pdf.SetHeaderFuncMode(, true)
+	//pdf.SetFooterFunc()
 	pdf.AddPage()
 	pdf.SetHomeXY()
 	if pdf.Err() {
