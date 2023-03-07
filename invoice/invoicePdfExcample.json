@@ -1,0 +1,79 @@
+{
+    "senderAddress": {
+        "fullForename": "",
+        "fullSurname": "",
+        "companyName": "",
+        "supplement": "",
+        "address": {
+            "road": "",
+            "houseNumber": "",
+            "streetSupplement": "",
+            "zipCode": "",
+            "cityName": "",
+            "country": "",
+            "countryCode": ""
+        }
+    },
+    "receiverAddress": {
+        "fullForename": "",
+        "fullSurname": "",
+        "companyName": "",
+        "supplement": "",
+        "address": {
+            "road": "",
+            "houseNumber": "",
+            "streetSupplement": "",
+            "zipCode": "",
+            "cityName": "",
+            "country": "",
+            "countryCode": ""
+        }
+    },
+    "senderInfo": {
+        "phone": "",
+        "email": "",
+        "logoSvg": "",
+        "iban": "",
+        "bic": "",
+        "taxNumber": "",
+        "bankName": ""
+    },
+    "invoiceMeta": {
+        "invoiceNumber": "",
+        "invoiceDate": "",
+        "customerNumber": ""
+    },
+    "InvoiceBody": {
+        "openingText": "",
+        "serviceTimeText": "",
+        "headlineText": "",
+        "closingText": "",
+        "ustNotice": "",
+        "invoicedItems": [
+            {
+                "positionNumber": 0,
+                "quantity": 1.0,
+                "unit": "",
+                "description": "",
+                "singlePrice": 1.0,
+                "overallPriceNet": 1.0,
+                "overallPriceGross": 1.0,
+                "overallTaxes": 1.0,
+                "taxesPercentage": 1.0,
+                "currency": ""
+            },
+            {
+                "positionNumber": 1,
+                "quantity": 1.0,
+                "unit": "",
+                "description": "",
+                "singlePrice": 1.0,
+                "overallPriceNet": 1.0,
+                "overallPriceGross": 1.0,
+                "overallTaxes": 1.0,
+                "taxesPercentage": 1.0,
+                "currency": ""
+            }
+        ]
+    }
+}

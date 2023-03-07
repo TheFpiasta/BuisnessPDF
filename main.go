@@ -17,11 +17,11 @@ var logger zerolog.Logger
 func pdfPage(w http.ResponseWriter, r *http.Request) {
 
 	invoiceHandler := invoice.New(&logger)
-	//err := invoiceHandler.SetJsonInvoiceData(r.Body)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
+	err := invoiceHandler.SetJsonInvoiceData(r)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	pdf, err := invoiceHandler.GeneratePDF()
 	if err != nil {
@@ -54,7 +54,7 @@ func main() {
 
 	const loggingLevel = 0
 	const logDir = ""
-	const openBrowserOnStartup = true
+	const openBrowserOnStartup = false
 
 	err := initLogger(loggingLevel, logDir)
 	if err != nil {
@@ -114,7 +114,7 @@ func initLogger(loggingLevel int, logDir string) (err error) {
 	if logDir == "" {
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).Level(logLevel).With().Timestamp().Logger()
 	} else {
-		logName := fmt.Sprintf("%sluicy_%s_%s.log", logDir, time.Now().Format("2006-01-02_15-04-05_1111"))
+		logName := fmt.Sprintf("%s%s.log", logDir, time.Now().Format("2006-01-02_15-04-05_1111"))
 		mainLogFile, err := os.OpenFile(logName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 		if err != nil {
