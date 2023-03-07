@@ -14,7 +14,7 @@ import (
 )
 
 type Invoice struct {
-	pdfData       invoicePdfData
+	pdfData       PdfInvoiceData
 	pdf           *gofpdf.Fpdf
 	logger        *zerolog.Logger
 	textFont      string
@@ -28,74 +28,67 @@ type Invoice struct {
 	fontGapY      float64
 	printErrStack bool
 }
-
-type invoicePdfData struct {
-	SenderAddress   addressInfo `json:"senderAddress"`
-	ReceiverAddress addressInfo `json:"receiverAddress"`
-	SenderInfo      senderInfo  `json:"senderInfo"`
-	InvoiceMeta     invoiceMeta `json:"invoiceMeta"`
-	InvoiceBody     invoiceBody `json:"InvoiceBody"`
-}
-
-type addressInfo struct {
-	FullForename string  `json:"fullForename"`
-	FullSurname  string  `json:"fullSurname"`
-	CompanyName  string  `json:"companyName"`
-	Supplement   string  `json:"supplement"`
-	Address      address `json:"address"`
-}
-
-type address struct {
-	Road             string `json:"road"`
-	HouseNumber      string `json:"houseNumber"`
-	StreetSupplement string `json:"streetSupplement"`
-	ZipCode          string `json:"zipCode"`
-	CityName         string `json:"cityName"`
-	Country          string `json:"country"`
-	CountryCode      string `json:"countryCode"`
-}
-
-type senderInfo struct {
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
-	LogSvgo   string `json:"logoSvg"`
-	Iban      string `json:"iban"`
-	Bic       string `json:"bic"`
-	TaxNumber string `json:"taxNumber"`
-	BankName  string `json:"bankName"`
-}
-
-type invoiceMeta struct {
-	InvoiceNumber  string `json:"invoiceNumber"`
-	InvoiceDate    string `json:"invoiceDate"`
-	CustomerNumber string `json:"customerNumber"`
-}
-
-type invoiceBody struct {
-	OpeningText     string          `json:"openingText"`
-	ServiceTimeText string          `json:"serviceTimeText"`
-	HeadlineText    string          `json:"headlineText"`
-	ClosingText     string          `json:"closingText"`
-	UstNotice       string          `json:"ustNotice"`
-	InvoicedItems   []invoicedItems `json:"invoicedItems"`
-	InvoicedSum     invoicedSum     `json:"invoicedSum"`
-}
-
-type invoicedItems struct {
-	PositionNumber int     `json:"positionNumber"`
-	Quantity       float64 `json:"quantity"`
-	Unit           string  `json:"unit"`
-	Description    string  `json:"description"`
-	SinglePrice    float64 `json:"singlePrice"`
-	NetPrice       float64 `json:"netPrice"`
-}
-
-type invoicedSum struct {
-	OverallPriceNet   float64 `json:"overallPriceNet"`
-	OverallPriceGross float64 `json:"overallPriceGross"`
-	OverallTaxes      float64 `json:"overallTaxes"`
-	TaxesPercentage   float64 `json:"taxesPercentage"`
-	Currency          string  `json:"currency"`
+type PdfInvoiceData struct {
+	SenderAddress struct {
+		FullForename string `json:"fullForename"`
+		FullSurname  string `json:"fullSurname"`
+		CompanyName  string `json:"companyName"`
+		Supplement   string `json:"supplement"`
+		Address      struct {
+			Road             string `json:"road"`
+			HouseNumber      string `json:"houseNumber"`
+			StreetSupplement string `json:"streetSupplement"`
+			ZipCode          string `json:"zipCode"`
+			CityName         string `json:"cityName"`
+			Country          string `json:"country"`
+			CountryCode      string `json:"countryCode"`
+		} `json:"address"`
+	} `json:"senderAddress"`
+	ReceiverAddress struct {
+		FullForename string `json:"fullForename"`
+		FullSurname  string `json:"fullSurname"`
+		CompanyName  string `json:"companyName"`
+		Supplement   string `json:"supplement"`
+		Address      struct {
+			Road             string `json:"road"`
+			HouseNumber      string `json:"houseNumber"`
+			StreetSupplement string `json:"streetSupplement"`
+			ZipCode          string `json:"zipCode"`
+			CityName         string `json:"cityName"`
+			Country          string `json:"country"`
+			CountryCode      string `json:"countryCode"`
+		} `json:"address"`
+	} `json:"receiverAddress"`
+	SenderInfo struct {
+		Phone     string `json:"phone"`
+		Email     string `json:"email"`
+		LogoSvg   string `json:"logoSvg"`
+		Iban      string `json:"iban"`
+		Bic       string `json:"bic"`
+		TaxNumber string `json:"taxNumber"`
+		BankName  string `json:"bankName"`
+	} `json:"senderInfo"`
+	InvoiceMeta struct {
+		InvoiceNumber  string `json:"invoiceNumber"`
+		InvoiceDate    string `json:"invoiceDate"`
+		CustomerNumber string `json:"customerNumber"`
+	} `json:"invoiceMeta"`
+	InvoiceBody struct {
+		OpeningText     string `json:"openingText"`
+		ServiceTimeText string `json:"serviceTimeText"`
+		HeadlineText    string `json:"headlineText"`
+		ClosingText     string `json:"closingText"`
+		UstNotice       string `json:"ustNotice"`
+		InvoicedItems   []struct {
+			PositionNumber string  `json:"positionNumber"`
+			Quantity       float64 `json:"quantity"`
+			Unit           string  `json:"unit"`
+			Description    string  `json:"description"`
+			SinglePrice    int     `json:"singlePrice"`
+			Currency       string  `json:"currency"`
+			TaxRate        int     `json:"taxRate"`
+		} `json:"invoicedItems"`
+	} `json:"invoiceBody"`
 }
 
 func New(logger *zerolog.Logger) (iv *Invoice) {
@@ -122,22 +115,13 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 
 	err = iv.validateJsonData()
 	if err != nil {
-		iv.pdfData = invoicePdfData{}
+		iv.pdfData = PdfInvoiceData{}
 		iv.LogError(err)
 		return errors.New("data parsing Failed")
 	}
 
 	return nil
 }
-
-//func round(num float64) int {
-//	return int(num + math.Copysign(0.5, num))
-//}
-//
-//func toFixed(num float64, precision int) float64 {
-//	output := math.Pow(10, float64(precision))
-//	return float64(round(num*output)) / output
-//}
 
 func germanNumber(n float64) string {
 	p := message.NewPrinter(language.German)
@@ -191,19 +175,19 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("04109 Leipzig", "", "L")
 
 	//MetaData Infos Rechnung in 2 Spalten
-	pdfGen.SetCursor(iv.marginLeft+100, 93)
+	pdfGen.DrawLine(iv.marginLeft+98, 56, iv.marginLeft+98, 80, lineColor, 0)
+	pdfGen.SetCursor(iv.marginLeft+100, 56)
 	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
 	pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
 	pdfGen.PrintLnPdfText("Datum:", "", "L")
 
-	pdfGen.SetCursor(iv.marginLeft+140, 93)
+	pdfGen.SetCursor(iv.marginLeft+140, 56)
 	pdfGen.PrintLnPdfText("KD83383", "", "L")
 	pdfGen.PrintLnPdfText("RE20230002", "", "L")
 	pdfGen.PrintLnPdfText("23.04.2023", "", "L")
 
 	//Überschrift
-	pdfGen.DrawLine(iv.marginLeft, 108, pageWidth-iv.marginRight, 108, lineColor, 0)
-	pdfGen.SetCursor(iv.marginLeft, 112)
+	pdfGen.SetCursor(iv.marginLeft, 100)
 	pdfGen.SetFontSize(headerFontSize)
 	pdfGen.PrintLnPdfText("Rechnung - 4", "b", "L")
 	pdfGen.SetFontSize(defaultFontSize)
@@ -239,9 +223,38 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	var productList = []productStruct{
 		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
 		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
+		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
+		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
+		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
+		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
+		{"2", 19, "h", 6500, "agiles Software-Testing", 0},
 	}
 
+	type taxSumType struct {
+		taxName string
+		taxSum  float64
+	}
+
+	var netSum = 0.
+
+	var taxSums []taxSumType
+
 	for _, product := range productList {
+		netSum += product.count * (float64(product.price) / float64(100))
+
+		//check if taxRate already exists
+		var taxSumExists = false
+		for i, taxSum := range taxSums {
+			if taxSum.taxName == strconv.Itoa(product.taxRate)+"%" {
+				taxSums[i].taxSum += product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))
+				taxSumExists = true
+			}
+		}
+		if !taxSumExists {
+			taxSums = append(taxSums, taxSumType{taxName: strconv.Itoa(product.taxRate) + "%",
+				taxSum: product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))})
+		}
+
 		bodyText = append(bodyText,
 			[]string{
 				product.iterator,
@@ -255,21 +268,32 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	var headerCells = []string{"Pos", "Anzahl", "Preis", "Beschreibung", "USt", "Netto"}
 	var columnWidth = []float64{getCellWith(6), getCellWith(10), getCellWith(10), getCellWith(54), getCellWith(8), getCellWith(12)}
-	//var bodyText = [][]string{
-	//	{"1", "40,50", "45,00€", "h", "agiles Software-Testing, System-Monitoring, \n Programmierung", "19%", "2.000,00€"},
-	//	{"1", "50,00", "40,00€", "h", "Softwareentwicklung", "19%", "1.000,00€"},
-	//}
+
+	var headerCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
 	var bodyCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
 	var summaryCells = [][]string{
-		{"", "Zwischensumme", "2.000,00€"},
-		{"", "USt. 19%", "0€"},
-		{"", "USt. 7%", "0€"},
-		{"", "Gesamtbetrag", "2.000,00€"},
+		{"", "Zwischensumme", germanNumber(netSum) + "€"},
 	}
+	//summaryCells append taxSums
+	for _, taxSum := range taxSums {
+		//append only if txSum is not 0
+		if taxSum.taxSum != 0 {
+			summaryCells = append(summaryCells, []string{"", taxSum.taxName, germanNumber(taxSum.taxSum) + "€"})
+		}
+	}
+
+	var totalTax = 0.
+	for _, taxSum := range taxSums {
+		totalTax += taxSum.taxSum
+	}
+
+	//add last row with total sum, calculated from netSum plus each taxSum
+	summaryCells = append(summaryCells, []string{"", "Gesamtbetrag", germanNumber(float64(totalTax)+netSum) + "€"})
+
 	var summaryColumnWidths = []float64{getCellWith(60), getCellWith(25), getCellWith(15)}
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
-	pdfGen.PrintTableHeader(headerCells, columnWidth)
+	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
 	pdfGen.PrintTableBody(bodyText, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 

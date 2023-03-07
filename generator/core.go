@@ -433,10 +433,10 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, p
 
 // PrintTableHeader print a generic and clean styled table header.
 //
-// cells contains the displayed column names of the table header.
+// cells contain the displayed column names of the table header.
 //
 // columnWidth defines the width of each column. NOTE: in general use here the same widths as in PrintTableBody()
-func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64) {
+func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64, columnAlignStrings []string) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
@@ -455,7 +455,7 @@ func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64
 	newlineHeight := lineHeight + core.data.FontGapY*2
 
 	for i, cell := range cells {
-		core.PrintPdfTextFormatted(cell, "b", "LM", "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
+		core.PrintPdfTextFormatted(cell, "b", columnAlignStrings[i], "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
 	}
 
 	core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
