@@ -2,13 +2,13 @@ package invoice
 
 import (
 	"SimpleInvoice/generator"
-	"fmt"
+	"errors"
+	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"io"
-	"math"
 	"net/url"
 	"strconv"
 )
@@ -26,6 +26,7 @@ type Invoice struct {
 	marginTop     float64
 	marginBottom  float64
 	fontGapY      float64
+	printErrStack bool
 }
 
 type invoicePdfData struct {
@@ -100,12 +101,13 @@ type invoicedSum struct {
 func New(logger *zerolog.Logger) (iv *Invoice) {
 
 	iv = &Invoice{
-		logger:       logger,
-		textFont:     "openSans",
-		marginLeft:   25,
-		marginRight:  20,
-		marginTop:    45,
-		marginBottom: 0,
+		logger:        logger,
+		textFont:      "openSans",
+		marginLeft:    25,
+		marginRight:   20,
+		marginTop:     45,
+		marginBottom:  0,
+		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 	}
 
 	return iv
@@ -114,25 +116,28 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 	err = iv.parseJsonData(jsonData)
 	if err != nil {
-		return iv.handleError(err, "Parsing Data Failed!")
+		iv.LogError(err)
+		return errors.New("data parsing Failed")
 	}
 
 	err = iv.validateJsonData()
 	if err != nil {
 		iv.pdfData = invoicePdfData{}
-		return iv.handleError(err, "Incorrect data!")
+		iv.LogError(err)
+		return errors.New("data parsing Failed")
 	}
 
 	return nil
 }
-func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
-}
 
-func toFixed(num float64, precision int) float64 {
-	output := math.Pow(10, float64(precision))
-	return float64(round(num*output)) / output
-}
+//func round(num float64) int {
+//	return int(num + math.Copysign(0.5, num))
+//}
+//
+//func toFixed(num float64, precision int) float64 {
+//	output := math.Pow(10, float64(precision))
+//	return float64(round(num*output)) / output
+//}
 
 func germanNumber(n float64) string {
 	p := message.NewPrinter(language.German)
@@ -291,10 +296,20 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
 	pdfGen.SetFontSize(defaultFontSize)
 
+	if pdfGen.GetError() != nil {
+		iv.LogError(pdfGen.GetError())
+	}
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (iv *Invoice) handleError(err error, msg string) (responseErr error) {
-	iv.logger.Error().Msgf(err.Error())
-	return fmt.Errorf("ERROR: %s", msg)
+func (iv *Invoice) LogError(err error) {
+	var errStr string
+
+	if _, ok := err.(*errorsWithStack.Error); ok && iv.printErrStack {
+		errStr = err.(*errorsWithStack.Error).ErrorStack()
+	} else {
+		errStr = err.Error()
+	}
+
+	iv.logger.Error().Msgf(errStr)
 }
