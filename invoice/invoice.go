@@ -57,6 +57,7 @@ type pdfInvoiceData struct {
 	} `json:"receiverAddress"`
 	SenderInfo struct {
 		Phone     string `json:"phone"`
+		Web       string `json:"web"`
 		Email     string `json:"email"`
 		LogoSvg   string `json:"logoSvg"`
 		Iban      string `json:"iban"`
@@ -149,12 +150,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 
-	urlStruct, err := url.Parse("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png")
+	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.LogoSvg)
 	if err != nil {
 		return iv.pdf, err
 	}
 
-	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 20, 0.5)
+	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 15, 0.5)
 	if err != nil {
 		return iv.pdf, err
 	}
@@ -304,18 +305,18 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.SetFontSize(smallFontSize)
 	pdfGen.DrawLine(iv.marginLeft, 261, pageWidth-iv.marginRight, 261, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 264)
-	pdfGen.PrintLnPdfText("https://stack-one.tech", "", "L")
-	pdfGen.PrintLnPdfText("015154897208", "", "L")
-	pdfGen.PrintLnPdfText("carsten@stack-one.de", "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Web, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Phone, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Email, "", "L")
 	pdfGen.SetCursor(105, 264)
-	pdfGen.PrintLnPdfText("stack1 GmbH", "", "C")
-	pdfGen.PrintLnPdfText("Floßplatz 24", "", "C")
-	pdfGen.PrintLnPdfText("04107 Leipzig", "", "C")
-	pdfGen.PrintLnPdfText("UstID: DE3498754987", "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.CompanyName, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.Road+" "+iv.pdfData.SenderAddress.Address.HouseNumber, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.TaxNumber, "", "C")
 	pdfGen.SetCursor(190, 264)
-	pdfGen.PrintLnPdfText("Sparkasse Leipzig", "", "R")
-	pdfGen.PrintLnPdfText("DE55 8605 5592 1090 3143 33", "", "R")
-	pdfGen.PrintLnPdfText("BIC: WELADE8LXXX", "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.BankName, "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Iban, "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Bic, "", "R")
 	pdfGen.DrawLine(iv.marginLeft, 282, pageWidth-iv.marginRight, 282, lineColor, 0)
 	pdfGen.SetFontSize(defaultFontSize)
 
