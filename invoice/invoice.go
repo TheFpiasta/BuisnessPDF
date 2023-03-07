@@ -8,27 +8,23 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 )
 
 type Invoice struct {
-	pdfData       PdfInvoiceData
+	pdfData       pdfInvoiceData
 	pdf           *gofpdf.Fpdf
 	logger        *zerolog.Logger
 	textFont      string
-	lineHeight    float64
-	textSize      float64
-	textSizeSmall float64
 	marginLeft    float64
 	marginRight   float64
 	marginTop     float64
 	marginBottom  float64
-	fontGapY      float64
 	printErrStack bool
 }
-type PdfInvoiceData struct {
+type pdfInvoiceData struct {
 	SenderAddress struct {
 		FullForename string `json:"fullForename"`
 		FullSurname  string `json:"fullSurname"`
@@ -101,13 +97,16 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		marginTop:     45,
 		marginBottom:  0,
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
+
+		pdfData: pdfInvoiceData{},
+		pdf:     nil,
 	}
 
 	return iv
 }
 
-func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
-	err = iv.parseJsonData(jsonData)
+func (iv *Invoice) SetJsonInvoiceData(request *http.Request) (err error) {
+	err = iv.parseJsonData(request)
 	if err != nil {
 		iv.LogError(err)
 		return errors.New("data parsing Failed")
@@ -115,7 +114,7 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 
 	err = iv.validateJsonData()
 	if err != nil {
-		iv.pdfData = PdfInvoiceData{}
+		iv.pdfData = pdfInvoiceData{}
 		iv.LogError(err)
 		return errors.New("data parsing Failed")
 	}

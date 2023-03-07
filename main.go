@@ -17,11 +17,11 @@ var logger zerolog.Logger
 func pdfPage(w http.ResponseWriter, r *http.Request) {
 
 	invoiceHandler := invoice.New(&logger)
-	//err := invoiceHandler.SetJsonInvoiceData(r.Body)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
+	err := invoiceHandler.SetJsonInvoiceData(r)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	pdf, err := invoiceHandler.GeneratePDF()
 	if err != nil {
@@ -54,7 +54,7 @@ func main() {
 
 	const loggingLevel = 0
 	const logDir = ""
-	const openBrowserOnStartup = true
+	const openBrowserOnStartup = false
 
 	err := initLogger(loggingLevel, logDir)
 	if err != nil {
