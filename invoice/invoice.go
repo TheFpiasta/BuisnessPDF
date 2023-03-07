@@ -57,6 +57,7 @@ type pdfInvoiceData struct {
 	} `json:"receiverAddress"`
 	SenderInfo struct {
 		Phone     string `json:"phone"`
+		Web       string `json:"web"`
 		Email     string `json:"email"`
 		LogoSvg   string `json:"logoSvg"`
 		Iban      string `json:"iban"`
@@ -149,12 +150,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 
-	urlStruct, err := url.Parse("https://cdn.pictro.de/logosIcons/stack-one_logo_vector_white_small.png")
+	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.LogoSvg)
 	if err != nil {
 		return iv.pdf, err
 	}
 
-	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 20, 0.5)
+	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 15, 0.5)
 	if err != nil {
 		return iv.pdf, err
 	}
@@ -214,25 +215,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return (percent * maxSavePrintingWidth) / 100.0
 	}
 
-	type productStruct struct {
-		iterator    string
-		count       float64
-		unit        string
-		price       int
-		description string
-		taxRate     int
-	}
-	var bodyText = [][]string{{}}
-
-	var productList = []productStruct{
-		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 0},
-	}
+	var invoicedItems = [][]string{{}}
 
 	type taxSumType struct {
 		taxName string
@@ -243,30 +226,30 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	var taxSums []taxSumType
 
-	for _, product := range productList {
-		netSum += product.count * (float64(product.price) / float64(100))
+	for _, product := range iv.pdfData.InvoiceBody.InvoicedItems {
+		netSum += product.Quantity * (float64(product.SinglePrice) / float64(100))
 
 		//check if taxRate already exists
 		var taxSumExists = false
 		for i, taxSum := range taxSums {
-			if taxSum.taxName == strconv.Itoa(product.taxRate)+"%" {
-				taxSums[i].taxSum += product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))
+			if taxSum.taxName == strconv.Itoa(product.TaxRate)+"%" {
+				taxSums[i].taxSum += product.Quantity * (float64(product.SinglePrice) / float64(100)) * (float64(product.TaxRate) / float64(100))
 				taxSumExists = true
 			}
 		}
 		if !taxSumExists {
-			taxSums = append(taxSums, taxSumType{taxName: strconv.Itoa(product.taxRate) + "%",
-				taxSum: product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))})
+			taxSums = append(taxSums, taxSumType{taxName: strconv.Itoa(product.TaxRate) + "%",
+				taxSum: product.Quantity * (float64(product.SinglePrice) / float64(100)) * (float64(product.TaxRate) / float64(100))})
 		}
 
-		bodyText = append(bodyText,
+		invoicedItems = append(invoicedItems,
 			[]string{
-				product.iterator,
-				germanNumber(product.count) + " " + product.unit,
-				germanNumber(float64(product.price)/float64(100)) + "€",
-				product.description,
-				strconv.Itoa(product.taxRate) + "%",
-				germanNumber(product.count * (float64(product.price) / float64(100))),
+				product.PositionNumber,
+				germanNumber(product.Quantity) + " " + product.Unit,
+				germanNumber(float64(product.SinglePrice)/float64(100)) + "€",
+				product.Description,
+				strconv.Itoa(product.TaxRate) + "%",
+				germanNumber(product.Quantity * (float64(product.SinglePrice) / float64(100))),
 			})
 	}
 
@@ -298,24 +281,24 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
 	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
-	pdfGen.PrintTableBody(bodyText, columnWidth, bodyCellAlign)
+	pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 
 	pdfGen.SetFontSize(smallFontSize)
 	pdfGen.DrawLine(iv.marginLeft, 261, pageWidth-iv.marginRight, 261, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 264)
-	pdfGen.PrintLnPdfText("https://stack-one.tech", "", "L")
-	pdfGen.PrintLnPdfText("015154897208", "", "L")
-	pdfGen.PrintLnPdfText("carsten@stack-one.de", "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Web, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Phone, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Email, "", "L")
 	pdfGen.SetCursor(105, 264)
-	pdfGen.PrintLnPdfText("stack1 GmbH", "", "C")
-	pdfGen.PrintLnPdfText("Floßplatz 24", "", "C")
-	pdfGen.PrintLnPdfText("04107 Leipzig", "", "C")
-	pdfGen.PrintLnPdfText("UstID: DE3498754987", "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.CompanyName, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.Road+" "+iv.pdfData.SenderAddress.Address.HouseNumber, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName, "", "C")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.TaxNumber, "", "C")
 	pdfGen.SetCursor(190, 264)
-	pdfGen.PrintLnPdfText("Sparkasse Leipzig", "", "R")
-	pdfGen.PrintLnPdfText("DE55 8605 5592 1090 3143 33", "", "R")
-	pdfGen.PrintLnPdfText("BIC: WELADE8LXXX", "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.BankName, "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Iban, "", "R")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Bic, "", "R")
 	pdfGen.DrawLine(iv.marginLeft, 282, pageWidth-iv.marginRight, 282, lineColor, 0)
 	pdfGen.SetFontSize(defaultFontSize)
 
