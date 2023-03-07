@@ -214,25 +214,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return (percent * maxSavePrintingWidth) / 100.0
 	}
 
-	type productStruct struct {
-		iterator    string
-		count       float64
-		unit        string
-		price       int
-		description string
-		taxRate     int
-	}
-	var bodyText = [][]string{{}}
-
-	var productList = []productStruct{
-		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"1", 40.5, "h", 4500, "agiles Software-Testing, System-Monitoring, \n Programmierung", 19},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 7},
-		{"2", 19, "h", 6500, "agiles Software-Testing", 0},
-	}
+	var invoicedItems = [][]string{{}}
 
 	type taxSumType struct {
 		taxName string
@@ -243,30 +225,30 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	var taxSums []taxSumType
 
-	for _, product := range productList {
-		netSum += product.count * (float64(product.price) / float64(100))
+	for _, product := range iv.pdfData.InvoiceBody.InvoicedItems {
+		netSum += product.Quantity * (float64(product.SinglePrice) / float64(100))
 
 		//check if taxRate already exists
 		var taxSumExists = false
 		for i, taxSum := range taxSums {
-			if taxSum.taxName == strconv.Itoa(product.taxRate)+"%" {
-				taxSums[i].taxSum += product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))
+			if taxSum.taxName == strconv.Itoa(product.TaxRate)+"%" {
+				taxSums[i].taxSum += product.Quantity * (float64(product.SinglePrice) / float64(100)) * (float64(product.TaxRate) / float64(100))
 				taxSumExists = true
 			}
 		}
 		if !taxSumExists {
-			taxSums = append(taxSums, taxSumType{taxName: strconv.Itoa(product.taxRate) + "%",
-				taxSum: product.count * (float64(product.price) / float64(100)) * (float64(product.taxRate) / float64(100))})
+			taxSums = append(taxSums, taxSumType{taxName: strconv.Itoa(product.TaxRate) + "%",
+				taxSum: product.Quantity * (float64(product.SinglePrice) / float64(100)) * (float64(product.TaxRate) / float64(100))})
 		}
 
-		bodyText = append(bodyText,
+		invoicedItems = append(invoicedItems,
 			[]string{
-				product.iterator,
-				germanNumber(product.count) + " " + product.unit,
-				germanNumber(float64(product.price)/float64(100)) + "€",
-				product.description,
-				strconv.Itoa(product.taxRate) + "%",
-				germanNumber(product.count * (float64(product.price) / float64(100))),
+				product.PositionNumber,
+				germanNumber(product.Quantity) + " " + product.Unit,
+				germanNumber(float64(product.SinglePrice)/float64(100)) + "€",
+				product.Description,
+				strconv.Itoa(product.TaxRate) + "%",
+				germanNumber(product.Quantity * (float64(product.SinglePrice) / float64(100))),
 			})
 	}
 
@@ -298,7 +280,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
 	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
-	pdfGen.PrintTableBody(bodyText, columnWidth, bodyCellAlign)
+	pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 
 	pdfGen.SetFontSize(smallFontSize)

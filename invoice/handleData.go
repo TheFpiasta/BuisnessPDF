@@ -7,7 +7,6 @@ import (
 )
 
 func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
-
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -16,7 +15,6 @@ func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
 	}(request.Body)
 
 	return json.NewDecoder(request.Body).Decode(&iv.pdfData)
-
 }
 
 // todo übernehmen von https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body ?
