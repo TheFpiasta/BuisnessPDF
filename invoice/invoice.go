@@ -8,27 +8,23 @@ import (
 	"github.com/rs/zerolog"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
-	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 )
 
 type Invoice struct {
-	pdfData       PdfInvoiceData
+	pdfData       pdfInvoiceData
 	pdf           *gofpdf.Fpdf
 	logger        *zerolog.Logger
 	textFont      string
-	lineHeight    float64
-	textSize      float64
-	textSizeSmall float64
 	marginLeft    float64
 	marginRight   float64
 	marginTop     float64
 	marginBottom  float64
-	fontGapY      float64
 	printErrStack bool
 }
-type PdfInvoiceData struct {
+type pdfInvoiceData struct {
 	SenderAddress struct {
 		FullForename string `json:"fullForename"`
 		FullSurname  string `json:"fullSurname"`
@@ -101,13 +97,16 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		marginTop:     45,
 		marginBottom:  0,
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
+
+		pdfData: pdfInvoiceData{},
+		pdf:     nil,
 	}
 
 	return iv
 }
 
-func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
-	err = iv.parseJsonData(jsonData)
+func (iv *Invoice) SetJsonInvoiceData(request *http.Request) (err error) {
+	err = iv.parseJsonData(request)
 	if err != nil {
 		iv.LogError(err)
 		return errors.New("data parsing Failed")
@@ -115,7 +114,7 @@ func (iv *Invoice) SetJsonInvoiceData(jsonData io.ReadCloser) (err error) {
 
 	err = iv.validateJsonData()
 	if err != nil {
-		iv.pdfData = PdfInvoiceData{}
+		iv.pdfData = pdfInvoiceData{}
 		iv.LogError(err)
 		return errors.New("data parsing Failed")
 	}
@@ -163,16 +162,25 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	//Anschrift Sender small
 	pdfGen.SetCursor(iv.marginLeft, 49)
 	pdfGen.SetFontSize(smallFontSize)
-	pdfGen.PrintPdfText("Firmen Name Gmbh, Paulaner-Str. 99, 04109 Leipzig", "", "L")
+	pdfGen.PrintPdfText(
+		iv.pdfData.SenderAddress.CompanyName+","+
+			iv.pdfData.SenderAddress.Address.Road+" "+
+			iv.pdfData.SenderAddress.Address.HouseNumber+", "+
+			iv.pdfData.SenderAddress.Address.CountryCode+" "+
+			iv.pdfData.SenderAddress.Address.ZipCode+" "+
+			iv.pdfData.SenderAddress.Address.CityName, "", "L")
 	pdfGen.SetFontSize(defaultFontSize)
 
 	//Anschrift Empfänger
 	pdfGen.SetCursor(iv.marginLeft, 56)
-	pdfGen.PrintLnPdfText("Firmen Name Gmbh", "", "L")
-	pdfGen.PrintLnPdfText("Frau Musterfrau", "", "L")
-	pdfGen.PrintLnPdfText("Paulaner-Str. 99", "", "L")
-	pdfGen.PrintLnPdfText("Str. Zusatz", "", "L")
-	pdfGen.PrintLnPdfText("04109 Leipzig", "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.CompanyName, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.FullForename+" "+iv.pdfData.SenderAddress.FullSurname,
+		"", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.Road+" "+iv.pdfData.SenderAddress.Address.HouseNumber,
+		"", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.StreetSupplement, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName,
+		"", "L")
 
 	//MetaData Infos Rechnung in 2 Spalten
 	pdfGen.DrawLine(iv.marginLeft+98, 56, iv.marginLeft+98, 80, lineColor, 0)
@@ -182,25 +190,21 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText("Datum:", "", "L")
 
 	pdfGen.SetCursor(iv.marginLeft+140, 56)
-	pdfGen.PrintLnPdfText("KD83383", "", "L")
-	pdfGen.PrintLnPdfText("RE20230002", "", "L")
-	pdfGen.PrintLnPdfText("23.04.2023", "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.CustomerNumber, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.InvoiceNumber, "", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.InvoiceDate, "", "L")
 
 	//Überschrift
 	pdfGen.SetCursor(iv.marginLeft, 100)
 	pdfGen.SetFontSize(headerFontSize)
-	pdfGen.PrintLnPdfText("Rechnung - 4", "b", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.HeadlineText+" "+iv.pdfData.InvoiceMeta.InvoiceNumber, "b", "L")
 	pdfGen.SetFontSize(defaultFontSize)
 	pdfGen.NewLine(pdfGen.GetMarginLeft())
 
-	pdfGen.PrintLnPdfText("Sehr geehrter Herr Mustermann,", "", "L")
-	pdfGen.NewLine(pdfGen.GetMarginLeft())
-
-	pdfGen.PrintLnPdfText("lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor \n     invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.", "", "L")
-	pdfGen.NewLine(pdfGen.GetMarginLeft())
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.OpeningText, "", "L")
 
 	pdfGen.SetFontSize(smallFontSize)
-	pdfGen.PrintLnPdfText("Leistungszeitraum: 01.01.1999 - 01.01.2023", "i", "L")
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.ServiceTimeText, "i", "L")
 	pdfGen.SetFontSize(defaultFontSize)
 
 	getCellWith := func(percent float64) float64 {
