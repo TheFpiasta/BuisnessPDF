@@ -16,21 +16,77 @@ The API has only one endpoint /pdf that takes a JSON payload with the necessary 
 
 ```json
 {
-    "company_name": "ACME Corp",
-    "invoice_number": "123",
-    "date": "2022-01-01",
-    "items": [
-        {
-            "description": "Item 1",
-            "quantity": 1,
-            "price": 10
-        },
-        {
-            "description": "Item 2",
-            "quantity": 2,
-            "price": 5
-        }
+  "senderAddress": {
+    "fullForename" : "Paul",
+    "fullSurname" : "Musterfrau",
+    "companyName" :  "Musterfirma",
+    "supplement" : "Raum 543",
+    "address" :  {
+      "road" : "Musterstraße",
+      "houseNumber" : "1a",
+      "streetSupplement" :  "Hinterhaus",
+      "zipCode" : "12345",
+      "cityName" :  "Musterstadt",
+      "country" : "Deutschland",
+      "countryCode" :  "DE"
+    }
+  },
+  "receiverAddress": {
+    "fullForename" : "Maria",
+    "fullSurname" : "Mustermann",
+    "companyName" :  "Mustermann GmbH",
+    "supplement" : "Platz 1",
+    "address" :  {
+      "road" : "Burgplatz",
+      "houseNumber" : "4",
+      "streetSupplement" :  "",
+      "zipCode" : "00000",
+      "cityName" :  "Beste Stadt",
+      "country" : "Spanien",
+      "countryCode" :  "ES"
+    }
+  },
+  "senderInfo" : {
+    "phone" : "01745412112",
+    "email" : "paul@musterfirma.de",
+    "logoSvg" :  "https://cdn.pixabay.com/photo/2017/03/16/21/18/logo-2150297__340.png",
+    "iban" : "DE12345678901234567890",
+    "bic" :  "DEUTDEDB123",
+    "taxNumber" : "123/456/789",
+    "bankName" :  "Musterbank"
+  },
+  "invoiceMeta" : {
+    "invoiceNumber" : "2",
+    "invoiceDate" : "29.03.2023",
+    "customerNumber" :  "KD222"
+  },
+  "invoiceBody" : {
+    "openingText" :  "Sehr geehrte Damen und Herren,\n hiermit stellen wir Ihnen die Rechnung für unsere Leistungenaus.",
+    "serviceTimeText" : "Leistungszeitraum: 01.01.2020 - 31.12.2020",
+    "headlineText" :  "Dauerrechnung",
+    "closingText" : "Wir danken für Ihr Vertrauen und freuen uns auf eine weitere Zusammenarbeit.",
+    "ustNotice" :  "Nach § 19 UStG wird MEGA viel Umsatzsteuer berechnet.",
+    "invoicedItems" : [
+      {
+        "positionNumber": "1",
+        "quantity": 40.5,
+        "unit": "h",
+        "description": "agiles Software-Testing, System-Monitoring, \n Programmierung",
+        "singlePrice": 4500,
+        "currency": "€",
+        "taxRate": 19
+      },
+      {
+        "positionNumber": "1",
+        "quantity": 40.5,
+        "unit": "h",
+        "description": "agiles Software-Testing, System-Monitoring, \n Programmierung",
+        "singlePrice": 4500,
+        "currency": "€",
+        "taxRate": 19
+      }
     ]
+  }
 }
 ```
 The API will return a PDF of the invoice.
