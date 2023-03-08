@@ -64,26 +64,27 @@ type Generator interface {
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
 	PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
+	NewLine(oldX float64)
 
-	PrintTableHeader(cells []string, columnWidth []float64)
+	PrintTableHeader(cells []string, columnWidth []float64, columnAlignStrings []string)
 	PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string)
 	PrintTableFooter(cells [][]string, columnWidths []float64, columnAlignStrings []string)
 
-	GetError() error
 	GetPdf() *gofpdf.Fpdf
-	SetCursor(x float64, y float64)
-	SetUnsafeCursor(x float64, y float64)
-	NewLine(oldX float64)
+	GetError() error
+	SetError(err error)
 
 	GetFontName() string
-	GetFontGapY() float64
-	SetFontGapY(fontGapY float64)
 	GetMarginLeft() float64
 	GetMarginTop() float64
 	GetMarginRight() float64
+	GetMarginBottom() float64
+	GetFontGapY() float64
+	SetFontGapY(fontGapY float64)
 	GetFontSize() float64
 	SetFontSize(textSize float64)
-	GetMarginBottom() float64
+	SetCursor(x float64, y float64)
+	SetUnsafeCursor(x float64, y float64)
 }
 
 // Color represents a specific color in red, green and blue values, each from 0 to 255

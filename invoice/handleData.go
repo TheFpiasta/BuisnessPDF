@@ -10,7 +10,7 @@ func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			iv.logger.Fatal().Msg(err.Error())
+			iv.LogError(err)
 		}
 	}(request.Body)
 
