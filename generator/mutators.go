@@ -68,6 +68,11 @@ func (core *PDFGenerator) SetFontSize(textSize float64) {
 	core.data.FontSize = textSize
 }
 
+// GetCursor returns the abscissa (x) and ordinate (y) cursor point
+func (core *PDFGenerator) GetCursor() (x float64, y float64) {
+	return core.pdf.GetXY()
+}
+
 // SetCursor set manual the abscissa (x) and ordinate (y) reference point
 // in the unit of measure specified in NewPDFGenerator() for the next operation.
 // The position must be inside the writing area, restricted by the defined margins in NewPDFGenerator()

@@ -79,10 +79,12 @@ type Generator interface {
 	GetMarginTop() float64
 	GetMarginRight() float64
 	GetMarginBottom() float64
+
 	GetFontGapY() float64
 	SetFontGapY(fontGapY float64)
 	GetFontSize() float64
 	SetFontSize(textSize float64)
+	GetCursor() (x float64, y float64)
 	SetCursor(x float64, y float64)
 	SetUnsafeCursor(x float64, y float64)
 }

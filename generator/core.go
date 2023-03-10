@@ -168,11 +168,13 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	// <--
 
 	lines := core.extractLinesFromText(text)
-	currentX := core.pdf.GetX()
+	referenceX := core.pdf.GetX()
 
 	for _, line := range lines {
-		core.PrintPdfText(line, styleStr, alignStr)
-		core.NewLine(currentX)
+		if line != "" {
+			core.PrintPdfText(line, styleStr, alignStr)
+		}
+		core.NewLine(referenceX)
 	}
 }
 
