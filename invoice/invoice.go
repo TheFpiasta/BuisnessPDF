@@ -16,7 +16,6 @@ import (
 
 type Invoice struct {
 	pdfData         pdfInvoiceData
-	pdf             *gofpdf.Fpdf
 	logger          *zerolog.Logger
 	textFont        string
 	marginLeft      float64
@@ -60,14 +59,15 @@ type pdfInvoiceData struct {
 		} `json:"address"`
 	} `json:"receiverAddress"`
 	SenderInfo struct {
-		Phone     string `json:"phone"`
-		Web       string `json:"web"`
-		Email     string `json:"email"`
-		LogoSvg   string `json:"logoSvg"`
-		Iban      string `json:"iban"`
-		Bic       string `json:"bic"`
-		TaxNumber string `json:"taxNumber"`
-		BankName  string `json:"bankName"`
+		Phone         string  `json:"phone"`
+		Web           string  `json:"web"`
+		Email         string  `json:"email"`
+		MimeLogoUrl   string  `json:"mimeLogoUrl"`
+		MimeLogoScale float64 `json:"mimeLogoScale"`
+		Iban          string  `json:"iban"`
+		Bic           string  `json:"bic"`
+		TaxNumber     string  `json:"taxNumber"`
+		BankName      string  `json:"bankName"`
 	} `json:"senderInfo"`
 	InvoiceMeta struct {
 		InvoiceNumber  string `json:"invoiceNumber"`
@@ -104,7 +104,6 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 
 		pdfData:         pdfInvoiceData{},
-		pdf:             nil,
 		defaultFontSize: 10,
 		smallFontSize:   8,
 		headerFontSize:  15,
@@ -157,11 +156,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return nil, err
 	}
 
-	iv.printHeaderPart(pdfGen)
-	iv.setAddressee(pdfGen)
+	iv.printMimeImg(pdfGen)
+	iv.printAddressee(pdfGen, lineColor)
 	iv.printMetaData(pdfGen, lineColor)
 	iv.printHeadlineAndOpeningText(pdfGen)
 	iv.printInvoiceTable(pdfGen)
+	iv.printClosingText(pdfGen)
 	iv.printFooter(pdfGen, lineColor)
 
 	if pdfGen.GetError() != nil {
@@ -171,23 +171,27 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (iv *Invoice) printHeaderPart(pdfGen *generator.PDFGenerator) {
-	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.LogoSvg)
+func (iv *Invoice) printMimeImg(pdfGen *generator.PDFGenerator) {
+	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.MimeLogoUrl)
 	if err != nil {
 		iv.logger.Error().Msg(err.Error())
 		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
 
-	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 15, 0.5)
-	if err != nil {
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	pdfGen.SetUnsafeCursor(pageWidth-iv.marginRight, 15)
+	pdfGen.PlaceMimeImageFromUrl(urlStruct, iv.pdfData.SenderInfo.MimeLogoScale, "R")
+	if pdfGen.GetError() != nil {
 		iv.logger.Error().Msg(err.Error())
-		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
 }
 
-func (iv *Invoice) setAddressee(pdfGen *generator.PDFGenerator) {
+func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	pdfGen.DrawLine(iv.marginLeft, iv.marginTop, pageWidth-iv.marginRight, iv.marginTop, lineColor, 0)
+
 	//Anschrift Sender small
 	pdfGen.SetCursor(iv.marginLeft, 49)
 	pdfGen.SetFontSize(iv.smallFontSize)
@@ -214,6 +218,7 @@ func (iv *Invoice) setAddressee(pdfGen *generator.PDFGenerator) {
 }
 
 func (iv *Invoice) printMetaData(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
+	pdfGen.SetFontSize(iv.defaultFontSize)
 	pdfGen.DrawLine(iv.marginLeft+98, 56, iv.marginLeft+98, 80, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft+100, 56)
 	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
@@ -236,10 +241,6 @@ func (iv *Invoice) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {
 	pdfGen.SetFontSize(iv.defaultFontSize)
 	pdfGen.NewLine(pdfGen.GetMarginLeft())
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.OpeningText, "", "L")
-
-	pdfGen.SetFontSize(iv.smallFontSize)
-	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.ServiceTimeText, "i", "L")
-	pdfGen.SetFontSize(iv.defaultFontSize)
 }
 
 func (iv *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
@@ -310,14 +311,30 @@ func (iv *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 	}
 
 	//add last row with total sum, calculated from netSum plus each taxSum
-	summaryCells = append(summaryCells, []string{"", "Gesamtbetrag", germanNumber(float64(totalTax)+netSum) + "€"})
+	summaryCells = append(summaryCells, []string{"", "Gesamtbetrag", germanNumber(totalTax+netSum) + "€"})
 
 	var summaryColumnWidths = []float64{getCellWith(60), getCellWith(25), getCellWith(15)}
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.SetFontSize(iv.smallFontSize)
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.ServiceTimeText, "i", "L")
+	pdfGen.SetFontSize(iv.defaultFontSize)
+
 	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
 	pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
+}
+
+func (iv *Invoice) printClosingText(pdfGen *generator.PDFGenerator) {
+	pdfGen.SetFontSize(iv.defaultFontSize)
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.ClosingText, "", "L")
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.NewLine(iv.marginLeft)
+	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.UstNotice, "", "L")
 }
 
 func (iv *Invoice) printFooter(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
@@ -331,7 +348,7 @@ func (iv *Invoice) printFooter(pdfGen *generator.PDFGenerator, lineColor generat
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Email, "", "L")
 	pdfGen.SetCursor(105, 264)
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.CompanyName, "", "C")
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.Road+" "+iv.pdfData.SenderAddress.Address.HouseNumber, "", "C")
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.SenderAddress.Address.Road, iv.pdfData.SenderAddress.Address.HouseNumber), "", "C")
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName, "", "C")
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.TaxNumber, "", "C")
 	pdfGen.SetCursor(190, 264)

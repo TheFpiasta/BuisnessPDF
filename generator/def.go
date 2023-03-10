@@ -62,7 +62,7 @@ type Generator interface {
 	PrintPdfText(text string, styleStr string, alignStr string)
 	PrintLnPdfText(text string, styleStr string, alignStr string)
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
-	PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error)
+	PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, alignStr string)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
 	NewLine(oldX float64)
 
@@ -79,10 +79,12 @@ type Generator interface {
 	GetMarginTop() float64
 	GetMarginRight() float64
 	GetMarginBottom() float64
+
 	GetFontGapY() float64
 	SetFontGapY(fontGapY float64)
 	GetFontSize() float64
 	SetFontSize(textSize float64)
+	GetCursor() (x float64, y float64)
 	SetCursor(x float64, y float64)
 	SetUnsafeCursor(x float64, y float64)
 }

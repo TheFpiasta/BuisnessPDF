@@ -49,7 +49,8 @@ The API has only one endpoint /pdf that takes a JSON payload with the necessary 
   "senderInfo" : {
     "phone" : "01745412112",
     "email" : "paul@musterfirma.de",
-    "logoSvg" :  "https://cdn.pixabay.com/photo/2017/03/16/21/18/logo-2150297__340.png",
+    "mimeLogoUrl" :  "https://cdn.pixabay.com/photo/2017/03/16/21/18/logo-2150297__340.png",
+    "mimeLogoScale": 0.5,
     "iban" : "DE12345678901234567890",
     "bic" :  "DEUTDEDB123",
     "taxNumber" : "123/456/789",
