@@ -16,7 +16,6 @@ import (
 
 type Invoice struct {
 	pdfData         pdfInvoiceData
-	pdf             *gofpdf.Fpdf
 	logger          *zerolog.Logger
 	textFont        string
 	marginLeft      float64
@@ -60,14 +59,15 @@ type pdfInvoiceData struct {
 		} `json:"address"`
 	} `json:"receiverAddress"`
 	SenderInfo struct {
-		Phone     string `json:"phone"`
-		Web       string `json:"web"`
-		Email     string `json:"email"`
-		LogoSvg   string `json:"logoSvg"`
-		Iban      string `json:"iban"`
-		Bic       string `json:"bic"`
-		TaxNumber string `json:"taxNumber"`
-		BankName  string `json:"bankName"`
+		Phone         string  `json:"phone"`
+		Web           string  `json:"web"`
+		Email         string  `json:"email"`
+		MimeLogoUrl   string  `json:"mimeLogoUrl"`
+		MimeLogoScale float64 `json:"mimeLogoScale"`
+		Iban          string  `json:"iban"`
+		Bic           string  `json:"bic"`
+		TaxNumber     string  `json:"taxNumber"`
+		BankName      string  `json:"bankName"`
 	} `json:"senderInfo"`
 	InvoiceMeta struct {
 		InvoiceNumber  string `json:"invoiceNumber"`
@@ -104,7 +104,6 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 
 		pdfData:         pdfInvoiceData{},
-		pdf:             nil,
 		defaultFontSize: 10,
 		smallFontSize:   8,
 		headerFontSize:  15,
@@ -158,7 +157,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	}
 
 	iv.printMimeImg(pdfGen)
-	iv.printAddressee(pdfGen)
+	iv.printAddressee(pdfGen, lineColor)
 	iv.printMetaData(pdfGen, lineColor)
 	iv.printHeadlineAndOpeningText(pdfGen)
 	iv.printInvoiceTable(pdfGen)
@@ -173,22 +172,26 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 }
 
 func (iv *Invoice) printMimeImg(pdfGen *generator.PDFGenerator) {
-	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.LogoSvg)
+	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.MimeLogoUrl)
 	if err != nil {
 		iv.logger.Error().Msg(err.Error())
 		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
 
-	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 15, 0.5)
-	if err != nil {
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	pdfGen.SetUnsafeCursor(pageWidth-iv.marginRight, 15)
+	pdfGen.PlaceMimeImageFromUrl(urlStruct, iv.pdfData.SenderInfo.MimeLogoScale, "R")
+	if pdfGen.GetError() != nil {
 		iv.logger.Error().Msg(err.Error())
-		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
 }
 
-func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator) {
+func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	pdfGen.DrawLine(iv.marginLeft, iv.marginTop, pageWidth-iv.marginRight, iv.marginTop, lineColor, 0)
+
 	//Anschrift Sender small
 	pdfGen.SetCursor(iv.marginLeft, 49)
 	pdfGen.SetFontSize(iv.smallFontSize)
