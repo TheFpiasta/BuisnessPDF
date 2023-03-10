@@ -3,6 +3,7 @@ package invoice
 import (
 	"SimpleInvoice/generator"
 	"errors"
+	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -14,15 +15,18 @@ import (
 )
 
 type Invoice struct {
-	pdfData       pdfInvoiceData
-	pdf           *gofpdf.Fpdf
-	logger        *zerolog.Logger
-	textFont      string
-	marginLeft    float64
-	marginRight   float64
-	marginTop     float64
-	marginBottom  float64
-	printErrStack bool
+	pdfData         pdfInvoiceData
+	pdf             *gofpdf.Fpdf
+	logger          *zerolog.Logger
+	textFont        string
+	marginLeft      float64
+	marginRight     float64
+	marginTop       float64
+	marginBottom    float64
+	printErrStack   bool
+	defaultFontSize float64
+	smallFontSize   float64
+	headerFontSize  float64
 }
 type pdfInvoiceData struct {
 	SenderAddress struct {
@@ -99,8 +103,11 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 		marginBottom:  0,
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 
-		pdfData: pdfInvoiceData{},
-		pdf:     nil,
+		pdfData:         pdfInvoiceData{},
+		pdf:             nil,
+		defaultFontSize: 10,
+		smallFontSize:   8,
+		headerFontSize:  15,
 	}
 
 	return iv
@@ -133,14 +140,11 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	iv.logger.Debug().Msg("Endpoint Hit: pdfPage")
 
 	lineColor := generator.Color{R: 200, G: 200, B: 200}
-	const defaultFontSize = 10
-	const smallFontSize = 8
-	const headerFontSize = 15
 
 	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
 		FontName:     "openSans",
 		FontGapY:     1.3,
-		FontSize:     defaultFontSize,
+		FontSize:     iv.defaultFontSize,
 		MarginLeft:   iv.marginLeft,
 		MarginTop:    iv.marginTop,
 		MarginRight:  iv.marginRight,
@@ -148,29 +152,54 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		Unit:         "mm",
 	}, false)
 
-	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	if err != nil {
+		iv.LogError(err)
+		return nil, err
+	}
 
+	iv.printHeaderPart(pdfGen)
+	iv.setAddressee(pdfGen)
+	iv.printMetaData(pdfGen, lineColor)
+	iv.printHeadlineAndOpeningText(pdfGen)
+	iv.printInvoiceTable(pdfGen)
+	iv.printFooter(pdfGen, lineColor)
+
+	if pdfGen.GetError() != nil {
+		iv.LogError(pdfGen.GetError())
+	}
+
+	return pdfGen.GetPdf(), pdfGen.GetError()
+}
+
+func (iv *Invoice) printHeaderPart(pdfGen *generator.PDFGenerator) {
 	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.LogoSvg)
 	if err != nil {
-		return iv.pdf, err
+		iv.logger.Error().Msg(err.Error())
+		pdfGen.SetError(errorsWithStack.New(err.Error()))
+		return
 	}
 
 	err = pdfGen.PlaceMimeImageFromUrl(urlStruct, 153, 15, 0.5)
 	if err != nil {
-		return iv.pdf, err
+		iv.logger.Error().Msg(err.Error())
+		pdfGen.SetError(errorsWithStack.New(err.Error()))
+		return
 	}
+}
 
+func (iv *Invoice) setAddressee(pdfGen *generator.PDFGenerator) {
 	//Anschrift Sender small
 	pdfGen.SetCursor(iv.marginLeft, 49)
-	pdfGen.SetFontSize(smallFontSize)
-	pdfGen.PrintPdfText(
-		iv.pdfData.SenderAddress.CompanyName+","+
-			iv.pdfData.SenderAddress.Address.Road+" "+
-			iv.pdfData.SenderAddress.Address.HouseNumber+", "+
-			iv.pdfData.SenderAddress.Address.CountryCode+" "+
-			iv.pdfData.SenderAddress.Address.ZipCode+" "+
-			iv.pdfData.SenderAddress.Address.CityName, "", "L")
-	pdfGen.SetFontSize(defaultFontSize)
+	pdfGen.SetFontSize(iv.smallFontSize)
+	addressSenderSmallText := fmt.Sprintf("%s,%s %s, %s %s %s",
+		iv.pdfData.SenderAddress.CompanyName,
+		iv.pdfData.SenderAddress.Address.Road,
+		iv.pdfData.SenderAddress.Address.HouseNumber,
+		iv.pdfData.SenderAddress.Address.CountryCode,
+		iv.pdfData.SenderAddress.Address.ZipCode,
+		iv.pdfData.SenderAddress.Address.CityName)
+	pdfGen.PrintPdfText(addressSenderSmallText, "", "L")
+	pdfGen.SetFontSize(iv.defaultFontSize)
 
 	//Anschrift Empfänger
 	pdfGen.SetCursor(iv.marginLeft, 56)
@@ -182,8 +211,9 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.StreetSupplement, "", "L")
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName,
 		"", "L")
+}
 
-	//MetaData Infos Rechnung in 2 Spalten
+func (iv *Invoice) printMetaData(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
 	pdfGen.DrawLine(iv.marginLeft+98, 56, iv.marginLeft+98, 80, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft+100, 56)
 	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
@@ -194,20 +224,25 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.CustomerNumber, "", "L")
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.InvoiceNumber, "", "L")
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceMeta.InvoiceDate, "", "L")
+}
 
+func (iv *Invoice) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {
 	//Überschrift
 	pdfGen.SetCursor(iv.marginLeft, 100)
-	pdfGen.SetFontSize(headerFontSize)
+	pdfGen.SetFontSize(iv.headerFontSize)
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.HeadlineText+" "+iv.pdfData.InvoiceMeta.InvoiceNumber, "b", "L")
-	pdfGen.SetFontSize(defaultFontSize)
-	pdfGen.NewLine(pdfGen.GetMarginLeft())
 
+	//opening
+	pdfGen.SetFontSize(iv.defaultFontSize)
+	pdfGen.NewLine(pdfGen.GetMarginLeft())
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.OpeningText, "", "L")
 
-	pdfGen.SetFontSize(smallFontSize)
+	pdfGen.SetFontSize(iv.smallFontSize)
 	pdfGen.PrintLnPdfText(iv.pdfData.InvoiceBody.ServiceTimeText, "i", "L")
-	pdfGen.SetFontSize(defaultFontSize)
+	pdfGen.SetFontSize(iv.defaultFontSize)
+}
 
+func (iv *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 	getCellWith := func(percent float64) float64 {
 		maxSavePrintingWidth, _ := pdfGen.GetPdf().GetPageSize()
 		maxSavePrintingWidth = maxSavePrintingWidth - pdfGen.GetMarginLeft() - pdfGen.GetMarginRight()
@@ -222,7 +257,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		taxSum  float64
 	}
 
-	var netSum = 0.
+	var netSum float64
 
 	var taxSums []taxSumType
 
@@ -283,8 +318,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
 	pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
 	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
+}
 
-	pdfGen.SetFontSize(smallFontSize)
+func (iv *Invoice) printFooter(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+
+	pdfGen.SetFontSize(iv.smallFontSize)
 	pdfGen.DrawLine(iv.marginLeft, 261, pageWidth-iv.marginRight, 261, lineColor, 0)
 	pdfGen.SetCursor(iv.marginLeft, 264)
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Web, "", "L")
@@ -300,17 +339,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Iban, "", "R")
 	pdfGen.PrintLnPdfText(iv.pdfData.SenderInfo.Bic, "", "R")
 	pdfGen.DrawLine(iv.marginLeft, 282, pageWidth-iv.marginRight, 282, lineColor, 0)
-	pdfGen.SetFontSize(defaultFontSize)
+	pdfGen.SetFontSize(iv.defaultFontSize)
 
 	pdfGen.SetCursor(pageWidth/2, 285)
-	pdfGen.SetFontSize(smallFontSize)
+	pdfGen.SetFontSize(iv.smallFontSize)
 	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
-	pdfGen.SetFontSize(defaultFontSize)
-
-	if pdfGen.GetError() != nil {
-		iv.LogError(pdfGen.GetError())
-	}
-	return pdfGen.GetPdf(), pdfGen.GetError()
+	pdfGen.SetFontSize(iv.defaultFontSize)
 }
 
 func (iv *Invoice) LogError(err error) {

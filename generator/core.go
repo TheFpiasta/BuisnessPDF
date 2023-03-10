@@ -81,53 +81,6 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 	return gen, pdf.Error()
 }
 
-// SetCursor set manual the abscissa (x) and ordinate (y) reference point
-// in the unit of measure specified in NewPDFGenerator() for the next operation.
-// The position must be inside the writing area, restricted by the defined margins in NewPDFGenerator()
-func (core *PDFGenerator) SetCursor(x float64, y float64) {
-	if core.strictErrorHandling == true && core.pdf.Err() {
-		return
-	}
-
-	// --> validate inputs
-	if x < core.data.MarginLeft || x > core.maxSaveX {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, core.data.MarginLeft, core.maxSaveX)))
-		return
-	}
-
-	if y < core.data.MarginTop || y > core.maxSaveY {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, core.data.MarginTop, core.maxSaveY)))
-		return
-	}
-	// <--
-
-	core.pdf.SetXY(x, y)
-}
-
-// SetUnsafeCursor set manual the abscissa (x) and ordinate (y) reference point
-// in the unit of measure specified in NewPDFGenerator() for the next operation.
-// The position must be inside the page area, restricted by the page size.
-func (core *PDFGenerator) SetUnsafeCursor(x float64, y float64) {
-	if core.strictErrorHandling == true && core.pdf.Err() {
-		return
-	}
-
-	// --> validate inputs
-	pageWidth, pageHeight := core.pdf.GetPageSize()
-	if x < 0 || x > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, 0.0, pageWidth)))
-		return
-	}
-
-	if y < 0 || y > pageHeight {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, 0.0, pageHeight)))
-		return
-	}
-	// <--
-
-	core.pdf.SetXY(x, y)
-}
-
 // PrintPdfText prints from the current cursor position a simple text cell in the PDF.
 //
 // text passed the string to print.
