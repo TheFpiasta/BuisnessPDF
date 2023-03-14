@@ -51,11 +51,13 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 
 	// create new PDF
 	pdf := gofpdf.New("P", data.Unit, "A4", "")
-	pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
-	pdf.AddUTF8Font("OpenSans", "l", "fonts/OpenSans-Light.ttf")
-	pdf.AddUTF8Font("OpenSans", "i", "fonts/OpenSans-Italic.ttf")
-	pdf.AddUTF8Font("OpenSans", "b", "fonts/OpenSans-Bold.ttf")
-	pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
+	if data.FontName == "OpenSans" {
+		pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
+		pdf.AddUTF8Font("OpenSans", "l", "fonts/OpenSans-Light.ttf")
+		pdf.AddUTF8Font("OpenSans", "i", "fonts/OpenSans-Italic.ttf")
+		pdf.AddUTF8Font("OpenSans", "b", "fonts/OpenSans-Bold.ttf")
+		pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
+	}
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
 	pdf.SetHomeXY()
