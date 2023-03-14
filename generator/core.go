@@ -81,53 +81,6 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 	return gen, pdf.Error()
 }
 
-// SetCursor set manual the abscissa (x) and ordinate (y) reference point
-// in the unit of measure specified in NewPDFGenerator() for the next operation.
-// The position must be inside the writing area, restricted by the defined margins in NewPDFGenerator()
-func (core *PDFGenerator) SetCursor(x float64, y float64) {
-	if core.strictErrorHandling == true && core.pdf.Err() {
-		return
-	}
-
-	// --> validate inputs
-	if x < core.data.MarginLeft || x > core.maxSaveX {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, core.data.MarginLeft, core.maxSaveX)))
-		return
-	}
-
-	if y < core.data.MarginTop || y > core.maxSaveY {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, core.data.MarginTop, core.maxSaveY)))
-		return
-	}
-	// <--
-
-	core.pdf.SetXY(x, y)
-}
-
-// SetUnsafeCursor set manual the abscissa (x) and ordinate (y) reference point
-// in the unit of measure specified in NewPDFGenerator() for the next operation.
-// The position must be inside the page area, restricted by the page size.
-func (core *PDFGenerator) SetUnsafeCursor(x float64, y float64) {
-	if core.strictErrorHandling == true && core.pdf.Err() {
-		return
-	}
-
-	// --> validate inputs
-	pageWidth, pageHeight := core.pdf.GetPageSize()
-	if x < 0 || x > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, 0.0, pageWidth)))
-		return
-	}
-
-	if y < 0 || y > pageHeight {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, 0.0, pageHeight)))
-		return
-	}
-	// <--
-
-	core.pdf.SetXY(x, y)
-}
-
 // PrintPdfText prints from the current cursor position a simple text cell in the PDF.
 //
 // text passed the string to print.
@@ -215,11 +168,13 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	// <--
 
 	lines := core.extractLinesFromText(text)
-	currentX := core.pdf.GetX()
+	referenceX := core.pdf.GetX()
 
 	for _, line := range lines {
-		core.PrintPdfText(line, styleStr, alignStr)
-		core.NewLine(currentX)
+		if line != "" {
+			core.PrintPdfText(line, styleStr, alignStr)
+		}
+		core.NewLine(referenceX)
 	}
 }
 
@@ -380,33 +335,26 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 }
 
 // PlaceMimeImageFromUrl downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL and puts it in the current page.
+// The top side of the image will be snap to the current cursor position.
 //
 // cdnUrl specifies a parsed (CDN) URL.
-//
-// posX and posY define the top left cursor abscissa (x) and ordinate (y) position in the unit of measure specified in NewPDFGenerator(), where the image should be pleased.
 //
 // scale specifies the scaling factor into which the image is drawn.
 // The value must be grater then 0. Use scaling of 1 for no scaling.
 // E.g. a value of 0.5 means draw the image in half the size of the original
 // and a value of 3 means draw the image in the triple size of the original.
-func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, posY float64, scale float64) (err error) {
+//
+// alignStr specifies the horizontal align type. Use:
+//
+//	"L" for align the left side of the image to the cursor,
+//	"R" for align the right side of the image to the cursor, and
+//	"C" for align the center of the image to the cursor.
+func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, alignStr string) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
 
 	// --> validate inputs
-	pageWidth, pageLength := core.pdf.GetPageSize()
-
-	if posX < 0 || posX > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("posX (%f) is out of range [%f, %f]!", posX, 0.0, pageWidth)))
-		return
-	}
-
-	if posY < 0 || posY > pageLength {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("posY (%f) is out of range [%f, %f]!", posY, 0.0, pageLength)))
-		return
-	}
-
 	if scale <= 0 {
 		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0!")))
 		return
@@ -415,20 +363,36 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, posX float64, p
 
 	var rsp *http.Response
 
-	rsp, err = http.Get(cdnUrl.String())
+	rsp, err := http.Get(cdnUrl.String())
 	if err != nil {
-		core.pdf.SetError(err)
-		return core.pdf.Error()
+		core.pdf.SetError(errorsWithStack.New(err))
+		return
 	}
 
 	imageMimeType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
 	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.String(), imageMimeType, rsp.Body)
-	if core.pdf.Ok() {
-		imgWd, imgHt := imageInfoType.Extent()
-		core.pdf.Image(cdnUrl.String(), posX, posY, imgWd*scale, imgHt*scale, false, imageMimeType, 0, "")
+
+	posX, posY := core.GetCursor()
+	imgWd, imgHt := imageInfoType.Extent()
+	imgWd, imgHt = imgWd*scale, imgHt*scale
+
+	switch alignStr {
+	case "L":
+		break
+	case "R":
+		posX = posX - imgWd
+	case "C":
+		posX = posX - (imgWd / 2.)
+	default:
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0!")))
+		return
 	}
 
-	return core.pdf.Error()
+	if core.pdf.Ok() {
+		core.pdf.Image(cdnUrl.String(), posX, posY, imgWd, imgHt, false, imageMimeType, 0, "")
+	}
+
+	return
 }
 
 // PrintTableHeader print a generic and clean styled table header.

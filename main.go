@@ -47,6 +47,7 @@ func homePage(w http.ResponseWriter, request *http.Request) {
 func handleRequests() {
 	http.HandleFunc("/pdf", pdfPage)
 	http.HandleFunc("/", homePage)
+	logger.Debug().Msg("start server on localhost:10000")
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
 
