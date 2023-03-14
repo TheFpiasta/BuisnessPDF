@@ -5,14 +5,14 @@ This project is a simple API built in Golang that allows users to create invoice
 
 To run the Invoice PDF Creator API, follow these steps:
 
-1. Clone the repository to your local machine.
-2. Make sure you have Golang installed on your machine.
-3. Run go run main.go in the terminal from the root directory of the project.
-4. The server should start running on http://localhost:8080.
+1. Install Go Version 1.18.x from the official webpage [https://go.dev/](https://go.dev/)
+2. Clone the repository to your local machine. ```git clone https://github.com/TheFpiasta/SimpleInvoice.git```
+3. Run ``go run main.go`` in the terminal from the root directory of the project.
+4. The server should start running on [http://localhost:10000](http://localhost:10000).
 
 ## Endpoints
 
-The API has only one endpoint /pdf that takes a JSON payload with the necessary data to create an invoice. The JSON payload should have the following structure:
+Once the application is running, you can send a POST request to the /pdf/ endpoint with a JSON body containing the necessary invoice details. The following is an example of a valid JSON request body:
 
 ```json
 {
@@ -94,5 +94,7 @@ The API will return a PDF of the invoice.
 
 ## Customization
 
-The API will allow some customization of the invoice through query parameters.
-Right now, that is not implemented.
+If you would like to contribute to SimpleInvoice, please fork the repository and submit a pull request. Contributions are always welcome, and we appreciate your help in making SimpleInvoice even better!
+
+## License
+SimpleInvoice is released under the MIT license. See 'LICENSE' for more information.
