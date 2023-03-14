@@ -207,13 +207,15 @@ func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor gene
 
 	//Anschrift Empfänger
 	pdfGen.SetCursor(iv.marginLeft, 56)
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.CompanyName, "", "L")
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.FullForename+" "+iv.pdfData.SenderAddress.FullSurname,
+	pdfGen.PrintLnPdfText(iv.pdfData.ReceiverAddress.CompanyName, "", "L")
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.FullForename, iv.pdfData.ReceiverAddress.FullSurname),
 		"", "L")
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.Road+" "+iv.pdfData.SenderAddress.Address.HouseNumber,
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.Address.Road, iv.pdfData.ReceiverAddress.Address.HouseNumber),
 		"", "L")
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.StreetSupplement, "", "L")
-	pdfGen.PrintLnPdfText(iv.pdfData.SenderAddress.Address.ZipCode+" "+iv.pdfData.SenderAddress.Address.CityName,
+	if iv.pdfData.ReceiverAddress.Address.StreetSupplement != "" {
+		pdfGen.PrintLnPdfText(iv.pdfData.ReceiverAddress.Address.StreetSupplement, "", "L")
+	}
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.Address.ZipCode, iv.pdfData.ReceiverAddress.Address.CityName),
 		"", "L")
 }
 
