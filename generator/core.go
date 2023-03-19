@@ -21,31 +21,31 @@ import (
 func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator, err error) {
 	// --> validate inputs
 	if data.FontGapY < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed!", data.FontGapY))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed.", data.FontGapY))
 	}
-	if data.FontSize < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontSize (%f) is not allowed!", data.FontSize))
+	if data.FontSize <= 0 {
+		return nil, errorsWithStack.New(fmt.Sprintf("Text size must be grather or equal then 0."))
 	}
 
 	validUnits := map[string]bool{"pt": true, "mm": true, "cm": true, "in": true}
 	if !validUnits[data.Unit] {
-		return nil, errorsWithStack.New(fmt.Sprintf("The Unit must be pt, mm, cm or in!"))
+		return nil, errorsWithStack.New(fmt.Sprintf("The Unit must be pt, mm, cm or in."))
 	}
 
 	if data.MarginLeft < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginLeft (%f) is not allowed!", data.MarginLeft))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginLeft (%f) is not allowed.", data.MarginLeft))
 	}
 
 	if data.MarginTop < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginTop (%f) is not allowed!", data.MarginTop))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginTop (%f) is not allowed.", data.MarginTop))
 	}
 
 	if data.MarginRight < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginRight (%f) is not allowed!", data.MarginRight))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginRight (%f) is not allowed.", data.MarginRight))
 	}
 
 	if data.MarginBottom < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginBottom (%f) is not allowed!", data.MarginBottom))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginBottom (%f) is not allowed.", data.MarginBottom))
 	}
 	// <--
 
