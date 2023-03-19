@@ -3,7 +3,6 @@ package generator
 import (
 	"github.com/go-errors/errors"
 	errorsWithStack "github.com/go-errors/errors"
-	"github.com/jung-kurt/gofpdf"
 	"reflect"
 	"testing"
 )
@@ -679,66 +678,153 @@ func TestPDFGenerator_SetFontGapY(t *testing.T) {
 }
 
 func TestPDFGenerator_SetFontSize(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		textSize float64
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		want    float64
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "integer value",
+			data:    defaultMetaData,
+			args:    args{textSize: 18},
+			want:    18,
+			wantErr: false,
+		},
+		{
+			name:    "float value",
+			data:    defaultMetaData,
+			args:    args{textSize: 2.3},
+			want:    2.3,
+			wantErr: false,
+		},
+		{
+			name:    "to small value",
+			data:    defaultMetaData,
+			args:    args{textSize: 0},
+			want:    defaultMetaData.FontSize,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
 			core.SetFontSize(tt.args.textSize)
+			if gotErr := core.pdf.Err(); gotErr != tt.wantErr {
+				t.Errorf("SetFontSize() get error = %v, want %v", gotErr, tt.wantErr)
+			}
+
+			if core.data.FontSize != tt.want {
+				t.Errorf("SetFontSize() font size = %v, want %v", core.data.FontSize, tt.wantErr)
+			}
+
 		})
 	}
 }
 
 func TestPDFGenerator_SetUnsafeCursor(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		x float64
 		y float64
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		want    args
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "correct input",
+			data: defaultMetaData,
+			args: args{
+				x: 0.9,
+				y: 12,
+			},
+			want: args{
+				x: 0.9,
+				y: 12,
+			},
+			wantErr: false,
+		},
+		{
+			name: "to small x",
+			data: defaultMetaData,
+			args: args{
+				x: -1,
+				y: 12,
+			},
+			want: args{
+				x: defaultMetaData.MarginLeft,
+				y: defaultMetaData.MarginTop,
+			},
+			wantErr: true,
+		},
+		{
+			name: "to small y",
+			data: defaultMetaData,
+			args: args{
+				x: 0.9,
+				y: -6.6,
+			},
+			want: args{
+				x: defaultMetaData.MarginLeft,
+				y: defaultMetaData.MarginTop,
+			},
+			wantErr: true,
+		},
+		{
+			name: "to big x",
+			data: defaultMetaData,
+			args: args{
+				x: 3698,
+				y: 12,
+			},
+			want: args{
+				x: defaultMetaData.MarginLeft,
+				y: defaultMetaData.MarginTop,
+			},
+			wantErr: true,
+		},
+		{
+			name: "to big y",
+			data: defaultMetaData,
+			args: args{
+				x: 0.9,
+				y: 5813,
+			},
+			want: args{
+				x: defaultMetaData.MarginLeft,
+				y: defaultMetaData.MarginTop,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
 			core.SetUnsafeCursor(tt.args.x, tt.args.y)
+
+			if gotErr := core.pdf.Err(); gotErr != tt.wantErr {
+				t.Errorf("SetUnsafeCursor() set a error = %v, want %v", gotErr, tt.wantErr)
+			}
+			if x, y := core.pdf.GetXY(); x != tt.want.x || y != tt.want.y {
+				t.Errorf("SetUnsafeCursor() = %v %v, want %v %v", x, y, tt.want.x, tt.want.y)
+			}
 		})
 	}
 }
