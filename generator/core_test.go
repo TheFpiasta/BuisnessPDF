@@ -15,21 +15,26 @@ func TestNewPDFGenerator(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantGen *PDFGenerator
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "no error",
+			args: args{
+				data:                defaultMetaData,
+				strictErrorHandling: false,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotGen, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling)
+			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling)
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPDFGenerator() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotGen, tt.wantGen) {
-				t.Errorf("NewPDFGenerator() gotGen = %v, want %v", gotGen, tt.wantGen)
-			}
+
 		})
 	}
 }
@@ -72,66 +77,92 @@ func TestPDFGenerator_DrawLine(t *testing.T) {
 }
 
 func TestPDFGenerator_NewLine(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		oldX float64
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "default",
+			data:    defaultMetaData,
+			args:    args{oldX: 15.3},
+			wantErr: false,
+		},
+		{
+			name: "font size * 3.14159",
+			data: MetaData{
+				FontName:     defaultMetaData.FontName,
+				FontGapY:     defaultMetaData.FontGapY,
+				FontSize:     defaultMetaData.FontSize * 3.14159,
+				MarginLeft:   defaultMetaData.MarginLeft,
+				MarginTop:    defaultMetaData.MarginTop,
+				MarginRight:  defaultMetaData.MarginRight,
+				MarginBottom: defaultMetaData.MarginBottom,
+				Unit:         defaultMetaData.Unit,
+			},
+			args:    args{oldX: 15.3},
+			wantErr: false,
+		},
+		{
+			name:    "to small old x",
+			data:    defaultMetaData,
+			args:    args{oldX: -0.1},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
+			_, lineHeight := core.pdf.GetFontSize()
+			wantNewY := tt.data.FontGapY + core.pdf.GetY() + lineHeight
+			wantX := tt.args.oldX
+
 			core.NewLine(tt.args.oldX)
+			if core.pdf.Err() != tt.wantErr {
+				t.Errorf("NewLine() error = %v, wantErr %v", core.pdf.Err(), tt.wantErr)
+				return
+			} else if core.pdf.Err() {
+				wantNewY = core.pdf.GetY()
+				wantX = core.pdf.GetX()
+			}
+
+			if x, y := core.pdf.GetXY(); x != wantX || y != wantNewY {
+				t.Errorf("NewLine() got x y = %v %v, want %v %v", x, y, tt.args.oldX, wantNewY)
+			}
 		})
 	}
 }
 
 func TestPDFGenerator_PlaceMimeImageFromUrl(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		cdnUrl   *url.URL
 		scale    float64
 		alignStr string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name string
+		data MetaData
+		args args
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
 			core.PlaceMimeImageFromUrl(tt.args.cdnUrl, tt.args.scale, tt.args.alignStr)
 		})
 	}
