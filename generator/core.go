@@ -357,8 +357,8 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	}
 
 	// --> validate inputs
-	if scale <= 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0.")))
+	if scale == 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image scale of 0 is not valide.")))
 		return
 	}
 	// <--
