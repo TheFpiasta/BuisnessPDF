@@ -19,8 +19,8 @@ Once the application is running, you can send a POST request to the /pdf/ endpoi
   "senderAddress": {
     "fullForename" : "Paul",
     "fullSurname" : "Musterfrau",
-    "companyName" :  "Musterfirma",
-    "supplement" : "Raum 543",
+    "companyName" :  "Musterfraufirma GmbH",
+    "supplement" : "",
     "address" :  {
       "road" : "Musterstraße",
       "houseNumber" : "1a",
@@ -34,55 +34,65 @@ Once the application is running, you can send a POST request to the /pdf/ endpoi
   "receiverAddress": {
     "fullForename" : "Maria",
     "fullSurname" : "Mustermann",
-    "companyName" :  "Mustermann GmbH",
+    "companyName" :  "Mustermannfirma GmbH",
     "supplement" : "Platz 1",
     "address" :  {
       "road" : "Burgplatz",
       "houseNumber" : "4",
       "streetSupplement" :  "",
-      "zipCode" : "00000",
-      "cityName" :  "Beste Stadt",
-      "country" : "Spanien",
-      "countryCode" :  "ES"
+      "zipCode" : "12345",
+      "cityName" :  "Musterstadt",
+      "country" : "Deutschland",
+      "countryCode" :  "DE"
     }
   },
   "senderInfo" : {
-    "phone" : "01745412112",
-    "email" : "paul@musterfirma.de",
-    "mimeLogoUrl" :  "https://cdn.pixabay.com/photo/2017/03/16/21/18/logo-2150297__340.png",
-    "mimeLogoScale": 0.5,
-    "iban" : "DE12345678901234567890",
-    "bic" :  "DEUTDEDB123",
+    "phone" : "01234567890",
+    "web" : "test.test",
+    "email" : "hello@test.test",
+    "mimeLogoUrl" :  "https://cdn.pictro.de/Test/logoTest.png",
+    "mimeLogoScale": 0.25,
+    "iban" : "DE02100100100006820101",
+    "bic" :  "PBNKDEFF",
     "taxNumber" : "123/456/789",
-    "bankName" :  "Musterbank"
+    "bankName" :  "POSTBANK"
   },
   "invoiceMeta" : {
-    "invoiceNumber" : "2",
-    "invoiceDate" : "29.03.2023",
-    "customerNumber" :  "KD222"
+    "invoiceNumber" : "Re23",
+    "invoiceDate" : "02.02.2023",
+    "customerNumber" :  "NEKO11"
   },
   "invoiceBody" : {
     "openingText" :  "Sehr geehrte Damen und Herren,\n hiermit stellen wir Ihnen die Rechnung für unsere Leistungenaus.",
-    "serviceTimeText" : "Leistungszeitraum: 01.01.2020 - 31.12.2020",
-    "headlineText" :  "Dauerrechnung",
+    "serviceTimeText" : "Leistungszeitraum: 01.01.2023 - 31.02.2023",
+    "headlineText" :  "Rechnung",
     "closingText" : "Wir danken für Ihr Vertrauen und freuen uns auf eine weitere Zusammenarbeit.",
-    "ustNotice" :  "Nach § 19 UStG wird MEGA viel Umsatzsteuer berechnet.",
+    "ustNotice" :  "",
     "invoicedItems" : [
       {
         "positionNumber": "1",
         "quantity": 40.5,
         "unit": "h",
-        "description": "agiles Software-Testing, System-Monitoring, \n Programmierung",
-        "singlePrice": 4500,
+        "description": "Programmierung",
+        "singlePrice": 8900,
         "currency": "€",
         "taxRate": 19
       },
       {
         "positionNumber": "1",
-        "quantity": 40.5,
+        "quantity": 20.7,
         "unit": "h",
-        "description": "agiles Software-Testing, System-Monitoring, \n Programmierung",
-        "singlePrice": 4500,
+        "description": "Software-Testing, System-Monitoring",
+        "singlePrice": 6800,
+        "currency": "€",
+        "taxRate": 19
+      },
+      {
+        "positionNumber": "1",
+        "quantity": 33.1,
+        "unit": "h",
+        "description": "IT-Beratung",
+        "singlePrice": 7500,
         "currency": "€",
         "taxRate": 19
       }
