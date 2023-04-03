@@ -21,41 +21,43 @@ import (
 func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator, err error) {
 	// --> validate inputs
 	if data.FontGapY < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed!", data.FontGapY))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed.", data.FontGapY))
 	}
-	if data.FontSize < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontSize (%f) is not allowed!", data.FontSize))
+	if data.FontSize <= 0 {
+		return nil, errorsWithStack.New(fmt.Sprintf("Text size must be grather or equal then 0."))
 	}
 
 	validUnits := map[string]bool{"pt": true, "mm": true, "cm": true, "in": true}
 	if !validUnits[data.Unit] {
-		return nil, errorsWithStack.New(fmt.Sprintf("The Unit must be pt, mm, cm or in!"))
+		return nil, errorsWithStack.New(fmt.Sprintf("The Unit must be pt, mm, cm or in."))
 	}
 
 	if data.MarginLeft < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginLeft (%f) is not allowed!", data.MarginLeft))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginLeft (%f) is not allowed.", data.MarginLeft))
 	}
 
 	if data.MarginTop < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginTop (%f) is not allowed!", data.MarginTop))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginTop (%f) is not allowed.", data.MarginTop))
 	}
 
 	if data.MarginRight < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginRight (%f) is not allowed!", data.MarginRight))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginRight (%f) is not allowed.", data.MarginRight))
 	}
 
 	if data.MarginBottom < 0 {
-		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginBottom (%f) is not allowed!", data.MarginBottom))
+		return nil, errorsWithStack.New(fmt.Sprintf("A negative MarginBottom (%f) is not allowed.", data.MarginBottom))
 	}
 	// <--
 
 	// create new PDF
 	pdf := gofpdf.New("P", data.Unit, "A4", "")
-	pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
-	pdf.AddUTF8Font("OpenSans", "l", "fonts/OpenSans-Light.ttf")
-	pdf.AddUTF8Font("OpenSans", "i", "fonts/OpenSans-Italic.ttf")
-	pdf.AddUTF8Font("OpenSans", "b", "fonts/OpenSans-Bold.ttf")
-	pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
+	if data.FontName == "OpenSans" {
+		pdf.AddUTF8Font("OpenSans", "", "fonts/OpenSans-Regular.ttf")
+		pdf.AddUTF8Font("OpenSans", "l", "fonts/OpenSans-Light.ttf")
+		pdf.AddUTF8Font("OpenSans", "i", "fonts/OpenSans-Italic.ttf")
+		pdf.AddUTF8Font("OpenSans", "b", "fonts/OpenSans-Bold.ttf")
+		pdf.AddUTF8Font("OpenSans", "m", "fonts/OpenSans-Medium.ttf")
+	}
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
 	pdf.SetHomeXY()
@@ -106,7 +108,7 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 	// --> validate inputs
 	valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
 	if !valideAlignStrs[alignStr] {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\"!", alignStr)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\".", alignStr)))
 		return
 	}
 
@@ -160,7 +162,7 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	// --> validate inputs
 	valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
 	if !valideAlignStrs[alignStr] {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\"!", alignStr)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\".", alignStr)))
 		return
 	}
 
@@ -187,7 +189,7 @@ func (core *PDFGenerator) NewLine(oldX float64) {
 
 	// --> validate inputs
 	if oldX < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative oldX is not allowed!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative oldX is not allowed.")))
 		return
 	}
 	// <--
@@ -262,16 +264,16 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 	//TODO refactor this
 	//valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
 	//if !valideAlignStrs[alignStr] {
-	//	core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\"!", alignStr)))
+	//	core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\".", alignStr)))
 	//	return
 	//}
 
 	if cellHeight < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed.")))
 		return
 	}
 	if cellWidth < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed.")))
 		return
 	}
 
@@ -302,29 +304,29 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 
 	// --> validate inputs
 	if lineWith < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed.")))
 		return
 	}
 
 	pageWidth, pageLength := core.pdf.GetPageSize()
 
 	if x1 < 0 || x1 > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("x1 (%f) is out of range [%f, %f]!", x1, 0.0, pageWidth)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("x1 (%f) is out of range [%f, %f].", x1, 0.0, pageWidth)))
 		return
 	}
 
 	if x2 < 0 || x2 > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("x2 (%f) is out of range [%f, %f]!", x2, 0.0, pageWidth)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("x2 (%f) is out of range [%f, %f].", x2, 0.0, pageWidth)))
 		return
 	}
 
 	if y1 < 0 || y1 > pageLength {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("y1 (%f) is out of range [%f, %f]!", y1, 0.0, pageLength)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("y1 (%f) is out of range [%f, %f].", y1, 0.0, pageLength)))
 		return
 	}
 
 	if y2 < 0 || y2 > pageLength {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("y2 (%f) is out of range [%f, %f]!", y2, 0.0, pageLength)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("y2 (%f) is out of range [%f, %f].", y2, 0.0, pageLength)))
 		return
 	}
 	// <--
@@ -355,8 +357,8 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	}
 
 	// --> validate inputs
-	if scale <= 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0!")))
+	if scale == 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image scale of 0 is not valide.")))
 		return
 	}
 	// <--
@@ -384,7 +386,7 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	case "C":
 		posX = posX - (imgWd / 2.)
 	default:
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image scale must be grater then 0.")))
 		return
 	}
 
@@ -407,7 +409,7 @@ func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64
 
 	// --> validate inputs
 	if len(cells) != len(columnWidth) {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of cells and columnWidth must be equial!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of cells and columnWidth must be equial.")))
 		return
 	}
 
@@ -447,7 +449,7 @@ func (core *PDFGenerator) PrintTableBody(cells [][]string, columnWidths []float6
 
 	// --> validate inputs
 	if len(columnWidths) != len(columnAlignStrings) {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of columnWidths and columnAlignStrings must be equial!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of columnWidths and columnAlignStrings must be equial.")))
 		return
 	}
 
@@ -536,7 +538,7 @@ func (core *PDFGenerator) printTableBodyRow(extractedLines [][]string, currentLi
 func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []float64, columnAlignStrings []string) {
 	// --> validate inputs
 	if len(columnWidths) != len(columnAlignStrings) {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of columnWidths and columnAlignStrings must be equial!")))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The length of columnWidths and columnAlignStrings must be equial.")))
 		return
 	}
 

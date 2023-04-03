@@ -20,6 +20,10 @@ func (core *PDFGenerator) GetError() error {
 
 // SetError set an internal PDF error.
 func (core *PDFGenerator) SetError(err error) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
 	core.pdf.SetError(err)
 }
 
@@ -55,6 +59,17 @@ func (core *PDFGenerator) GetFontGapY() float64 {
 
 // SetFontGapY change the gap between two lines in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) SetFontGapY(fontGapY float64) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	// --> validate inputs
+	if fontGapY < 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Text size must be grather or equal then 0.")))
+		return
+	}
+	// <--
+
 	core.data.FontGapY = fontGapY
 }
 
@@ -65,6 +80,17 @@ func (core *PDFGenerator) GetFontSize() float64 {
 
 // SetFontSize change the font size in the unit of measure specified in NewPDFGenerator().
 func (core *PDFGenerator) SetFontSize(textSize float64) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	// --> validate inputs
+	if textSize <= 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Text size must be grather then 0.")))
+		return
+	}
+	// <--
+
 	core.data.FontSize = textSize
 }
 
@@ -83,12 +109,12 @@ func (core *PDFGenerator) SetCursor(x float64, y float64) {
 
 	// --> validate inputs
 	if x < core.data.MarginLeft || x > core.maxSaveX {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, core.data.MarginLeft, core.maxSaveX)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f].", x, core.data.MarginLeft, core.maxSaveX)))
 		return
 	}
 
 	if y < core.data.MarginTop || y > core.maxSaveY {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, core.data.MarginTop, core.maxSaveY)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f].", y, core.data.MarginTop, core.maxSaveY)))
 		return
 	}
 	// <--
@@ -107,12 +133,12 @@ func (core *PDFGenerator) SetUnsafeCursor(x float64, y float64) {
 	// --> validate inputs
 	pageWidth, pageHeight := core.pdf.GetPageSize()
 	if x < 0 || x > pageWidth {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f]!", x, 0.0, pageWidth)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position x = %f is out of range [%f, %f].", x, 0.0, pageWidth)))
 		return
 	}
 
 	if y < 0 || y > pageHeight {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f]!", y, 0.0, pageHeight)))
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("New cursor position y = %f is out of range [%f, %f].", y, 0.0, pageHeight)))
 		return
 	}
 	// <--
