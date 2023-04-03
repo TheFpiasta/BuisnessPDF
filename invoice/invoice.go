@@ -217,7 +217,7 @@ func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor gene
 	)
 
 	if iv.pdfData.SenderAddress.Address.StreetSupplement != "" {
-		addressSenderSmallText += " "
+		addressSenderSmallText += ", "
 		addressSenderSmallText += iv.pdfData.SenderAddress.Address.StreetSupplement
 	}
 
@@ -317,7 +317,7 @@ func (iv *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 				germanNumber(float64(product.SinglePrice)/float64(100)) + "€",
 				product.Description,
 				strconv.Itoa(product.TaxRate) + "%",
-				germanNumber(product.Quantity * (float64(product.SinglePrice) / float64(100))),
+				germanNumber(product.Quantity*(float64(product.SinglePrice)/float64(100))) + "€",
 			})
 	}
 
