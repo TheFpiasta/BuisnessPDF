@@ -112,6 +112,11 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 		return
 	}
 
+	if len(text) == 0 {
+		core.pdf.SetError(errorsWithStack.New("No text to print, return now."))
+		return
+	}
+
 	// TODO adjust style string ("B" (bold), "I" (italic), "U" (underscore), "S" (strike-out) or any combination. The default value (specified with an empty string) is regular.)
 	// <--
 
@@ -163,6 +168,11 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	valideAlignStrs := map[string]bool{"L": true, "R": true, "C": true}
 	if !valideAlignStrs[alignStr] {
 		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("\"%s\" is not a valid alignStr of \"L\", \"R\" or \"C\".", alignStr)))
+		return
+	}
+
+	if len(text) == 0 {
+		core.pdf.SetError(errorsWithStack.New("No text to print, return now. Please use NewLine() to print a new line."))
 		return
 	}
 
@@ -268,12 +278,12 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 	//	return
 	//}
 
-	if cellHeight < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed.")))
+	if cellHeight <= 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative or zero cellHeight is not allowed.")))
 		return
 	}
-	if cellWidth < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative cellHeight is not allowed.")))
+	if cellWidth <= 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative or zero cellHeight is not allowed.")))
 		return
 	}
 
