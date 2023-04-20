@@ -123,5 +123,6 @@ func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
 //}
 
 func (iv *Invoice) validateJsonData() (err error) {
+	//TODO implement
 	return nil
 }
