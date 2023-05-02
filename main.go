@@ -3,6 +3,7 @@ package main
 import (
 	"SimpleInvoice/invoice"
 	"fmt"
+	errorsWithStack "github.com/go-errors/errors"
 	"github.com/rs/zerolog"
 	"log"
 	"net/http"
@@ -19,19 +20,21 @@ func pdfPage(w http.ResponseWriter, r *http.Request) {
 	invoiceHandler := invoice.New(&logger)
 	err := invoiceHandler.SetJsonInvoiceData(r)
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	pdf, err := invoiceHandler.GeneratePDF()
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logError(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = pdf.Output(w)
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logError(err)
 	}
 }
 
@@ -130,4 +133,17 @@ func initLogger(loggingLevel int, logDir string) (err error) {
 	}
 
 	return nil
+}
+
+func logError(err error) {
+	var errStr string
+	const printErrStack = true
+
+	if _, ok := err.(*errorsWithStack.Error); ok && printErrStack {
+		errStr = err.(*errorsWithStack.Error).ErrorStack()
+	} else {
+		errStr = err.Error()
+	}
+
+	logger.Error().Msgf(errStr)
 }
