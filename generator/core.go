@@ -4,6 +4,7 @@ import (
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
+	"github.com/rs/zerolog"
 	"math"
 	"net/http"
 	"net/url"
@@ -18,7 +19,7 @@ import (
 // If strictErrorHandling is set to false, all methods are tried to execute executed, even if a pdf internal error is set.
 // This may cause the PDF internal error to be overwritten by a new error.
 // Use GetError() to get the current pdf internal error.
-func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator, err error) {
+func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Logger) (gen *PDFGenerator, err error) {
 	// --> validate inputs
 	if data.FontGapY < 0 {
 		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed.", data.FontGapY))
@@ -73,6 +74,7 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool) (gen *PDFGenerator
 
 	// create new PDFGenerator instance
 	gen = new(PDFGenerator)
+	gen.logger = logger
 	pageWidth, pageHeight := pdf.GetPageSize()
 	gen.pdf = pdf
 	gen.data = data
@@ -113,7 +115,8 @@ func (core *PDFGenerator) PrintPdfText(text string, styleStr string, alignStr st
 	}
 
 	if len(text) == 0 {
-		core.pdf.SetError(errorsWithStack.New("No text to print, return now."))
+		core.logger.Warn().Msg("No text to print, return now. Please use NewLine() to print a new line.")
+		//core.pdf.SetError(errorsWithStack.New("No text to print, return now."))
 		return
 	}
 
@@ -172,7 +175,8 @@ func (core *PDFGenerator) PrintLnPdfText(text string, styleStr string, alignStr 
 	}
 
 	if len(text) == 0 {
-		core.pdf.SetError(errorsWithStack.New("No text to print, return now. Please use NewLine() to print a new line."))
+		core.logger.Warn().Msg("No text to print, return now. Please use NewLine() to print a new line.")
+		//core.pdf.SetError(errorsWithStack.New("No text to print, return now. Please use NewLine() to print a new line."))
 		return
 	}
 
