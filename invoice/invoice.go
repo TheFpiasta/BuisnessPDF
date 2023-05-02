@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"SimpleInvoice/generator"
-	"errors"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
@@ -115,15 +114,13 @@ func New(logger *zerolog.Logger) (iv *Invoice) {
 func (iv *Invoice) SetJsonInvoiceData(request *http.Request) (err error) {
 	err = iv.parseJsonData(request)
 	if err != nil {
-		iv.LogError(err)
-		return errors.New("data parsing Failed")
+		return err
 	}
 
 	err = iv.validateJsonData()
 	if err != nil {
 		iv.pdfData = pdfInvoiceData{}
-		iv.LogError(err)
-		return errors.New("data parsing Failed")
+		return err
 	}
 
 	return nil
@@ -149,10 +146,9 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		MarginRight:  iv.marginRight,
 		MarginBottom: iv.marginBottom,
 		Unit:         "mm",
-	}, false)
+	}, false, iv.logger)
 
 	if err != nil {
-		iv.LogError(err)
 		return nil, err
 	}
 
@@ -166,17 +162,12 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	iv.printClosingText(pdfGen)
 	iv.printFooter(pdfGen, lineColor)
 
-	if pdfGen.GetError() != nil {
-		iv.LogError(pdfGen.GetError())
-	}
-
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (iv *Invoice) printMimeImg(pdfGen *generator.PDFGenerator) {
 	urlStruct, err := url.Parse(iv.pdfData.SenderInfo.MimeLogoUrl)
 	if err != nil {
-		iv.logger.Error().Msg(err.Error())
 		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
@@ -184,10 +175,6 @@ func (iv *Invoice) printMimeImg(pdfGen *generator.PDFGenerator) {
 	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
 	pdfGen.SetUnsafeCursor(pageWidth-iv.marginRight, 15)
 	pdfGen.PlaceMimeImageFromUrl(urlStruct, iv.pdfData.SenderInfo.MimeLogoScale, "R")
-	if pdfGen.GetError() != nil {
-		iv.logger.Error().Msg(err.Error())
-		return
-	}
 }
 
 func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
