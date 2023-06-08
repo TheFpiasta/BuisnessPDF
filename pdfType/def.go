@@ -2,8 +2,6 @@ package pdfType
 
 import (
 	"github.com/jung-kurt/gofpdf"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 	"net/http"
 )
 
@@ -15,23 +13,23 @@ type PdfType interface {
 	validateData() (err error)
 }
 
-type pdfMeta struct {
-	margin pdfMargin
-	font   pdfFont
+type PdfMeta struct {
+	Margin pdfMargin
+	Font   pdfFont
 }
 
 type pdfFont struct {
-	fontName    string
-	sizeDefault float64
-	sizeSmall   float64
+	FontName    string
+	SizeDefault float64
+	SizeSmall   float64
 	SizeLarge   float64
 }
 
 type pdfMargin struct {
-	left   float64
-	right  float64
-	top    float64
-	bottom float64
+	Left   float64
+	Right  float64
+	Top    float64
+	Bottom float64
 }
 
 // todo übernehmen von https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body ?
@@ -138,8 +136,3 @@ type pdfMargin struct {
 //
 //	fmt.Fprintf(w, "Person: %+v", p)
 //}
-
-func germanNumber(n float64) string {
-	p := message.NewPrinter(language.German)
-	return p.Sprintf("%.2f", n)
-}

@@ -11,7 +11,7 @@ import (
 
 type DeliveryNode struct {
 	data          deliveryNodeRequestData
-	meta          pdfMeta
+	meta          PdfMeta
 	logger        *zerolog.Logger
 	printErrStack bool
 }
@@ -22,17 +22,17 @@ type deliveryNodeRequestData struct {
 func NewDeliveryNode(logger *zerolog.Logger) *DeliveryNode {
 	return &DeliveryNode{
 		data: deliveryNodeRequestData{},
-		meta: pdfMeta{
-			margin: pdfMargin{
-				left:   25,
-				right:  20,
-				top:    45,
-				bottom: 0,
+		meta: PdfMeta{
+			Margin: pdfMargin{
+				Left:   25,
+				Right:  20,
+				Top:    45,
+				Bottom: 0,
 			},
-			font: pdfFont{
-				fontName:    "openSans",
-				sizeDefault: 10,
-				sizeSmall:   8,
+			Font: pdfFont{
+				FontName:    "openSans",
+				SizeDefault: 10,
+				SizeSmall:   8,
 				SizeLarge:   15,
 			},
 		},
