@@ -131,6 +131,7 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	d.printMetaData(pdfGen, lineColor)
 	d.printHeadlineAndOpeningText(pdfGen)
 	//i.printInvoiceTable(pdfGen)
+	//TODO unterschriften einfügen
 	d.printClosingText(pdfGen)
 	letterFooter(d.pdfGen, d.meta, d.data.SenderInfo, d.data.SenderAddress, lineColor)
 
