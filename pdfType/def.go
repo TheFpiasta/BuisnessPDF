@@ -1,20 +1,37 @@
-package invoice
+package pdfType
 
 import (
-	"encoding/json"
-	"io"
+	"github.com/jung-kurt/gofpdf"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 	"net/http"
 )
 
-func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			iv.LogError(err)
-		}
-	}(request.Body)
+type PdfType interface {
+	SetDataFromRequest(request *http.Request) (err error)
+	GeneratePDF() (*gofpdf.Fpdf, error)
+	LogError(err error)
 
-	return json.NewDecoder(request.Body).Decode(&iv.pdfData)
+	validateData() (err error)
+}
+
+type pdfMeta struct {
+	margin pdfMargin
+	font   pdfFont
+}
+
+type pdfFont struct {
+	fontName    string
+	sizeDefault float64
+	sizeSmall   float64
+	SizeLarge   float64
+}
+
+type pdfMargin struct {
+	left   float64
+	right  float64
+	top    float64
+	bottom float64
 }
 
 // todo übernehmen von https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body ?
@@ -122,7 +139,7 @@ func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
 //	fmt.Fprintf(w, "Person: %+v", p)
 //}
 
-func (iv *Invoice) validateJsonData() (err error) {
-	//TODO implement
-	return nil
+func germanNumber(n float64) string {
+	p := message.NewPrinter(language.German)
+	return p.Sprintf("%.2f", n)
 }
