@@ -46,34 +46,6 @@ type invoiceRequestData struct {
 	} `json:"invoiceBody"`
 }
 
-type FullPersonInfo struct {
-	FullForename string `json:"fullForename"`
-	FullSurname  string `json:"fullSurname"`
-	CompanyName  string `json:"companyName"`
-	Supplement   string `json:"supplement"`
-	Address      struct {
-		Road             string `json:"road"`
-		HouseNumber      string `json:"houseNumber"`
-		StreetSupplement string `json:"streetSupplement"`
-		ZipCode          string `json:"zipCode"`
-		CityName         string `json:"cityName"`
-		Country          string `json:"country"`
-		CountryCode      string `json:"countryCode"`
-	} `json:"address"`
-}
-
-type SenderInfo struct {
-	Phone         string  `json:"phone"`
-	Web           string  `json:"web"`
-	Email         string  `json:"email"`
-	MimeLogoUrl   string  `json:"mimeLogoUrl"`
-	MimeLogoScale float64 `json:"mimeLogoScale"`
-	Iban          string  `json:"iban"`
-	Bic           string  `json:"bic"`
-	TaxNumber     string  `json:"taxNumber"`
-	BankName      string  `json:"bankName"`
-}
-
 func NewInvoice(logger *zerolog.Logger) *Invoice {
 	return &Invoice{
 		data: invoiceRequestData{},
@@ -123,8 +95,20 @@ func (i *Invoice) validateData() (err error) {
 	return err
 }
 
+func (i *Invoice) LogError(err error) {
+	var errStr string
+
+	if _, ok := err.(*errorsWithStack.Error); ok && i.printErrStack {
+		errStr = err.(*errorsWithStack.Error).ErrorStack()
+	} else {
+		errStr = err.Error()
+	}
+
+	i.logger.Error().Msgf(errStr)
+}
+
 func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
-	i.logger.Debug().Msg("Endpoint Hit: pdfPage")
+	i.logger.Debug().Msg("generate invoice")
 
 	lineColor := generator.Color{R: 200, G: 200, B: 200}
 
@@ -159,26 +143,14 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (i *Invoice) LogError(err error) {
-	var errStr string
-
-	if _, ok := err.(*errorsWithStack.Error); ok && i.printErrStack {
-		errStr = err.(*errorsWithStack.Error).ErrorStack()
-	} else {
-		errStr = err.Error()
-	}
-
-	i.logger.Error().Msgf(errStr)
-}
-
 func (i *Invoice) printMimeImg() {
 	pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
 	mimeImg(i.pdfGen, i.data.SenderInfo.MimeLogoUrl, pageWidth-i.meta.Margin.Right, 15, i.data.SenderInfo.MimeLogoScale)
 }
 
 func (i *Invoice) printAddressee(lineColor generator.Color) {
-	pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
-	i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
+	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
+	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
 
 	letterAddressSenderSmall(i.pdfGen, getAddressLine(i.data.SenderAddress), i.meta.Margin.Left, 49, i.meta.Font.SizeSmall)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)

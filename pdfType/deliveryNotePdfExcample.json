@@ -1,0 +1,66 @@
+{
+  "senderAddress": {
+    "fullForename": "",
+    "fullSurname": "",
+    "companyName": "",
+    "supplement": "",
+    "address": {
+      "road": "",
+      "houseNumber": "",
+      "streetSupplement": "",
+      "zipCode": "",
+      "cityName": "",
+      "country": "",
+      "countryCode": ""
+    }
+  },
+  "receiverAddress": {
+    "fullForename": "",
+    "fullSurname": "",
+    "companyName": "",
+    "supplement": "",
+    "address": {
+      "road": "",
+      "houseNumber": "",
+      "streetSupplement": "",
+      "zipCode": "",
+      "cityName": "",
+      "country": "",
+      "countryCode": ""
+    }
+  },
+  "senderInfo": {
+    "phone": "",
+    "email": "",
+    "logoSvg": "",
+    "iban": "",
+    "bic": "",
+    "taxNumber": "",
+    "bankName": ""
+  },
+  "deliveryMeta": {
+    "deliveryNodeNumber": "",
+    "deliveryDate": "",
+    "customerNumber": ""
+  },
+  "deliveryNodeTexts": {
+    "openingText": "",
+    "headlineText": "",
+    "closingText": "",
+    "agb": ""
+  },
+  "deliveryItems": [
+    {
+      "positionNumber": "0",
+      "quantity": 1.0,
+      "description": "",
+      "unit": ""
+    },
+    {
+      "positionNumber": "1",
+      "quantity": 1.0,
+      "description": "",
+      "unit": ""
+    }
+  ]
+}

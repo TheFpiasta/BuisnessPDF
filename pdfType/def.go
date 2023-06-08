@@ -32,6 +32,34 @@ type pdfMargin struct {
 	Bottom float64
 }
 
+type FullPersonInfo struct {
+	FullForename string `json:"fullForename"`
+	FullSurname  string `json:"fullSurname"`
+	CompanyName  string `json:"companyName"`
+	Supplement   string `json:"supplement"`
+	Address      struct {
+		Road             string `json:"road"`
+		HouseNumber      string `json:"houseNumber"`
+		StreetSupplement string `json:"streetSupplement"`
+		ZipCode          string `json:"zipCode"`
+		CityName         string `json:"cityName"`
+		Country          string `json:"country"`
+		CountryCode      string `json:"countryCode"`
+	} `json:"address"`
+}
+
+type SenderInfo struct {
+	Phone         string  `json:"phone"`
+	Web           string  `json:"web"`
+	Email         string  `json:"email"`
+	MimeLogoUrl   string  `json:"mimeLogoUrl"`
+	MimeLogoScale float64 `json:"mimeLogoScale"`
+	Iban          string  `json:"iban"`
+	Bic           string  `json:"bic"`
+	TaxNumber     string  `json:"taxNumber"`
+	BankName      string  `json:"bankName"`
+}
+
 // todo übernehmen von https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body ?
 //func personCreate(w http.ResponseWriter, r *http.Request) {
 //	// If the Content-Type header is present, check that it has the value
