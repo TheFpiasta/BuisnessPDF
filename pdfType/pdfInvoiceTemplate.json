@@ -32,6 +32,7 @@
     "senderInfo": {
         "phone": "",
         "email": "",
+        "web": "",
         "logoSvg": "",
         "iban": "",
         "bic": "",
