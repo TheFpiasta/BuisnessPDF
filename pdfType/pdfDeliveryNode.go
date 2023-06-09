@@ -130,7 +130,7 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	d.printAddressee(lineColor)
 	d.printMetaData(pdfGen, lineColor)
 	d.printHeadlineAndOpeningText(pdfGen)
-	//i.printInvoiceTable(pdfGen)
+	d.printDeliveryTable(pdfGen)
 	//TODO unterschriften einfügen
 	d.printClosingText(pdfGen)
 	letterFooter(d.pdfGen, d.meta, d.data.SenderInfo, d.data.SenderAddress, lineColor)
@@ -179,7 +179,31 @@ func (d *DeliveryNode) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerato
 	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.OpeningText, "", "L")
 }
 
-//TODO implelment table
+func (d *DeliveryNode) printDeliveryTable(pdfGen *generator.PDFGenerator) {
+	var items = [][]string{{}}
+
+	for _, item := range d.data.DeliveryItems {
+		items = append(items,
+			[]string{
+				item.PositionNumber,
+				germanNumber(int(item.Quantity)) + " " + item.Unit,
+				item.Description,
+				"",
+			})
+	}
+
+	var headerCells = []string{"Pos", "Anzahl", "Beschreibung", "Notiz"}
+	var columnPercent = []float64{7, 18, 40, 35}
+	var columnWidth = getColumnWithFromPercentage(pdfGen, columnPercent)
+	var headerCellAlign = []string{"LM", "LM", "LM", "LM"}
+	var bodyCellAlign = []string{"LM", "LM", "LM", "LM"}
+
+	pdfGen.NewLine(d.meta.Margin.Left)
+	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
+	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
+	pdfGen.PrintTableBody(items, columnWidth, bodyCellAlign)
+
+}
 
 func (d *DeliveryNode) printClosingText(pdfGen *generator.PDFGenerator) {
 	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
@@ -190,4 +214,8 @@ func (d *DeliveryNode) printClosingText(pdfGen *generator.PDFGenerator) {
 	pdfGen.NewLine(d.meta.Margin.Left)
 	pdfGen.NewLine(d.meta.Margin.Left)
 	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.Agb, "", "L")
+}
+
+func (d *DeliveryNode) printSignatureSection(pdfGen *generator.PDFGenerator) {
+	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
 }

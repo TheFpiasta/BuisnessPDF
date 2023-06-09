@@ -224,7 +224,8 @@ func (i *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 	}
 
 	var headerCells = []string{"Pos", "Anzahl", "Preis", "Beschreibung", "USt", "Netto"}
-	var columnWidth = []float64{getCellWith(i.pdfGen, 6), getCellWith(i.pdfGen, 10), getCellWith(i.pdfGen, 10), getCellWith(i.pdfGen, 54), getCellWith(i.pdfGen, 8), getCellWith(i.pdfGen, 12)}
+	var columnPercent = []float64{6, 10, 10, 54, 8, 12}
+	var columnWidth = getColumnWithFromPercentage(pdfGen, columnPercent)
 
 	var headerCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
 	var bodyCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
@@ -247,7 +248,8 @@ func (i *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 	//add last row with total sum, calculated from netSum plus each taxSum
 	summaryCells = append(summaryCells, []string{"", "Gesamtbetrag", germanNumber(totalTax+netSum) + "€"})
 
-	var summaryColumnWidths = []float64{getCellWith(i.pdfGen, 60), getCellWith(i.pdfGen, 25), getCellWith(i.pdfGen, 15)}
+	var summaryColumnPercent = []float64{60, 25, 15}
+	var summaryColumnWidths = getColumnWithFromPercentage(pdfGen, summaryColumnPercent)
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
 	pdfGen.NewLine(i.meta.Margin.Left)

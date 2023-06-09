@@ -3,6 +3,8 @@ package pdfType
 import (
 	"SimpleInvoice/generator"
 	"fmt"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func getAddressLine(address FullPersonInfo) string {
@@ -36,6 +38,19 @@ func getAddressLine(address FullPersonInfo) string {
 	)
 
 	return addressSenderSmallText
+}
+
+func germanNumber[T float64 | int](n T) string {
+	p := message.NewPrinter(language.German)
+
+	switch fmt.Sprintf("%T", *new(T)) {
+	case "float64":
+		return p.Sprintf("%.2f", n)
+	case "int":
+		return p.Sprintf("%d", n)
+	default:
+		return "GERMAN NUMBER FAILED"
+	}
 }
 
 func getCellWith(pdfGen *generator.PDFGenerator, percent float64) float64 {

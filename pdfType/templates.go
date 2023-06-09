@@ -4,8 +4,6 @@ import (
 	"SimpleInvoice/generator"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
-	"golang.org/x/text/language"
-	"golang.org/x/text/message"
 	"net/url"
 )
 
@@ -71,7 +69,9 @@ func letterReceiverAddress(pdfGen *generator.PDFGenerator, receiverAddress FullP
 		"", "L")
 }
 
-func germanNumber(n float64) string {
-	p := message.NewPrinter(language.German)
-	return p.Sprintf("%.2f", n)
+func getColumnWithFromPercentage(pdfGen *generator.PDFGenerator, columnPercent []float64) (columnWidth []float64) {
+	for _, p := range columnPercent {
+		columnWidth = append(columnWidth, getCellWith(pdfGen, p))
+	}
+	return columnWidth
 }
