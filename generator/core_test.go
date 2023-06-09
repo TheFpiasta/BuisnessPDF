@@ -2,11 +2,15 @@ package generator
 
 import (
 	"github.com/jung-kurt/gofpdf"
+	"github.com/rs/zerolog"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+var _logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).Level(zerolog.DebugLevel).With().Timestamp().Logger()
 
 func TestNewPDFGenerator(t *testing.T) {
 	type args struct {
@@ -21,7 +25,7 @@ func TestNewPDFGenerator(t *testing.T) {
 		{
 			name: "no error",
 			args: args{
-				data:                defaultMetaData,
+				data:                _defaultMetaData,
 				strictErrorHandling: false,
 			},
 			wantErr: false,
@@ -29,7 +33,7 @@ func TestNewPDFGenerator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling)
+			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling, &_logger)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPDFGenerator() error = %v, wantErr %v", err, tt.wantErr)
@@ -89,35 +93,35 @@ func TestPDFGenerator_NewLine(t *testing.T) {
 	}{
 		{
 			name:    "default",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{oldX: 15.3},
 			wantErr: false,
 		},
 		{
 			name: "font size * 3.14159",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize * 3.14159,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize * 3.14159,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			args:    args{oldX: 15.3},
 			wantErr: false,
 		},
 		{
 			name:    "to small old x",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{oldX: -0.1},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -158,7 +162,7 @@ func TestPDFGenerator_PlaceMimeImageFromUrl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -184,7 +188,7 @@ func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
 	}{
 		{
 			name: "normal print",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:     "Test abc",
 				styleStr: "b",
@@ -194,7 +198,7 @@ func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
 		},
 		{
 			name: "no text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:     "Test abc",
 				styleStr: "b",
@@ -204,7 +208,7 @@ func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
 		},
 		{
 			name: "long text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
 					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
@@ -219,7 +223,7 @@ func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -259,7 +263,7 @@ func TestPDFGenerator_PrintPdfText(t *testing.T) {
 	}{
 		{
 			name: "normal print",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:     "Test abc",
 				styleStr: "b",
@@ -269,7 +273,7 @@ func TestPDFGenerator_PrintPdfText(t *testing.T) {
 		},
 		{
 			name: "no text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:     "Test abc",
 				styleStr: "b",
@@ -279,7 +283,7 @@ func TestPDFGenerator_PrintPdfText(t *testing.T) {
 		},
 		{
 			name: "long text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
 					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
@@ -294,7 +298,7 @@ func TestPDFGenerator_PrintPdfText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -336,7 +340,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 	}{
 		{
 			name: "normal print",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:            "Test abc",
 				styleStr:        "b",
@@ -351,7 +355,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 		},
 		{
 			name: "no text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:            "Test abc",
 				styleStr:        "b",
@@ -366,7 +370,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 		},
 		{
 			name: "long text",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
 					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
@@ -384,7 +388,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 		},
 		{
 			name: "wrong cellHeight",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:            "Test",
 				styleStr:        "",
@@ -399,7 +403,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 		},
 		{
 			name: "wrong cellWidth",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				text:            "Test",
 				styleStr:        "",
@@ -416,7 +420,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -587,26 +591,26 @@ func TestPDFGenerator_extractLinesFromText(t *testing.T) {
 	}{
 		{
 			name:          "default",
-			data:          defaultMetaData,
+			data:          _defaultMetaData,
 			args:          args{text: "Hi\nFrom \nThe\n Test \n !!!1!11\n"},
 			wantTextLines: []string{"Hi", "From ", "The", "Test ", "!!!1!11", ""},
 		},
 		{
 			name:          "nothing to do",
-			data:          defaultMetaData,
+			data:          _defaultMetaData,
 			args:          args{text: ""},
 			wantTextLines: []string{""},
 		},
 		{
 			name:          "only \\n",
-			data:          defaultMetaData,
+			data:          _defaultMetaData,
 			args:          args{text: "\n"},
 			wantTextLines: []string{"", ""},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return

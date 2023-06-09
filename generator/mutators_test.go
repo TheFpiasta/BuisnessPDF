@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var defaultMetaData = MetaData{
+var _defaultMetaData = MetaData{
 	FontName:     "Arial",
 	FontGapY:     1,
 	FontSize:     1,
@@ -30,7 +30,7 @@ func TestPDFGenerator_GetCursor(t *testing.T) {
 	}{
 		{
 			name:      "integer value",
-			data:      defaultMetaData,
+			data:      _defaultMetaData,
 			setCursor: false,
 			setX:      0,
 			setY:      0,
@@ -39,7 +39,7 @@ func TestPDFGenerator_GetCursor(t *testing.T) {
 		},
 		{
 			name:      "float value",
-			data:      defaultMetaData,
+			data:      _defaultMetaData,
 			setCursor: true,
 			setX:      12.4,
 			setY:      32.9,
@@ -49,7 +49,7 @@ func TestPDFGenerator_GetCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -79,20 +79,20 @@ func TestPDFGenerator_GetError(t *testing.T) {
 	}{
 		{
 			name:    "set no pdf error",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			setErr:  "",
 			wantErr: false,
 		},
 		{
 			name:    "set pdf error",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			setErr:  "test",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -117,35 +117,35 @@ func TestPDFGenerator_GetFontGapY(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.FontGapY,
+			want: _defaultMetaData.FontGapY,
 		},
 		{
 			name: "float value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
+				FontName:     _defaultMetaData.FontName,
 				FontGapY:     9.6,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 9.6,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -167,35 +167,35 @@ func TestPDFGenerator_GetFontName(t *testing.T) {
 		{
 			name: "Arial",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.FontName,
+			want: _defaultMetaData.FontName,
 		},
 		{
 			name: "Times",
 			data: MetaData{
 				FontName:     "Times",
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: "Times",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -217,35 +217,35 @@ func TestPDFGenerator_GetFontSize(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.FontSize,
+			want: _defaultMetaData.FontSize,
 		},
 		{
 			name: "float size",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
 				FontSize:     0.6,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 0.6,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -267,35 +267,35 @@ func TestPDFGenerator_GetMarginBottom(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.MarginBottom,
+			want: _defaultMetaData.MarginBottom,
 		},
 		{
 			name: "float value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
 				MarginBottom: 8.7,
-				Unit:         defaultMetaData.Unit,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 8.7,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -317,35 +317,35 @@ func TestPDFGenerator_GetMarginLeft(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.MarginLeft,
+			want: _defaultMetaData.MarginLeft,
 		},
 		{
 			name: "float value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
 				MarginLeft:   6.7,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 6.7,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -367,35 +367,35 @@ func TestPDFGenerator_GetMarginRight(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.MarginRight,
+			want: _defaultMetaData.MarginRight,
 		},
 		{
 			name: "float value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
 				MarginRight:  0.9,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 0.9,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -417,35 +417,35 @@ func TestPDFGenerator_GetMarginTop(t *testing.T) {
 		{
 			name: "integer value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
-			want: defaultMetaData.MarginTop,
+			want: _defaultMetaData.MarginTop,
 		},
 		{
 			name: "float value",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize,
-				MarginLeft:   defaultMetaData.MarginLeft,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize,
+				MarginLeft:   _defaultMetaData.MarginLeft,
 				MarginTop:    4.4,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			want: 4.4,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -465,12 +465,12 @@ func TestPDFGenerator_GetPdf(t *testing.T) {
 	}{
 		{
 			name: "default",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -498,7 +498,7 @@ func TestPDFGenerator_SetCursor(t *testing.T) {
 	}{
 		{
 			name: "correct input",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 10,
 				y: 8.5,
@@ -511,60 +511,60 @@ func TestPDFGenerator_SetCursor(t *testing.T) {
 		},
 		{
 			name: "to small x",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 0.9,
 				y: 8.5,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to small y",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 10,
 				y: 0.9,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to big x",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 1000,
 				y: 8.5,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to big y",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 10,
 				y: 850,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -593,23 +593,23 @@ func TestPDFGenerator_SetError(t *testing.T) {
 	}{
 		{
 			name: "nil err",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{err: nil},
 		},
 		{
 			name: "errors",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{err: errors.New("test error")},
 		},
 		{
 			name: "errors with stack",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{err: errorsWithStack.New("test error")},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -637,29 +637,29 @@ func TestPDFGenerator_SetFontGapY(t *testing.T) {
 	}{
 		{
 			name:    "integer value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{fontGapY: 6},
 			want:    6,
 			wantErr: false,
 		},
 		{
 			name:    "float value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{fontGapY: 3.14},
 			want:    3.14,
 			wantErr: false,
 		},
 		{
 			name:    "to small value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{fontGapY: -3.14},
-			want:    defaultMetaData.FontGapY,
+			want:    _defaultMetaData.FontGapY,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -690,29 +690,29 @@ func TestPDFGenerator_SetFontSize(t *testing.T) {
 	}{
 		{
 			name:    "integer value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{textSize: 18},
 			want:    18,
 			wantErr: false,
 		},
 		{
 			name:    "float value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{textSize: 2.3},
 			want:    2.3,
 			wantErr: false,
 		},
 		{
 			name:    "to small value",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{textSize: 0},
-			want:    defaultMetaData.FontSize,
+			want:    _defaultMetaData.FontSize,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -745,7 +745,7 @@ func TestPDFGenerator_SetUnsafeCursor(t *testing.T) {
 	}{
 		{
 			name: "correct input",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 0.9,
 				y: 12,
@@ -758,60 +758,60 @@ func TestPDFGenerator_SetUnsafeCursor(t *testing.T) {
 		},
 		{
 			name: "to small x",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: -1,
 				y: 12,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to small y",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 0.9,
 				y: -6.6,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to big x",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 3698,
 				y: 12,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 		{
 			name: "to big y",
-			data: defaultMetaData,
+			data: _defaultMetaData,
 			args: args{
 				x: 0.9,
 				y: 5813,
 			},
 			want: args{
-				x: defaultMetaData.MarginLeft,
-				y: defaultMetaData.MarginTop,
+				x: _defaultMetaData.MarginLeft,
+				y: _defaultMetaData.MarginTop,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
