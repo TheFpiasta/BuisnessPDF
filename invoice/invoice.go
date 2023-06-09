@@ -141,7 +141,7 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	lineColor := generator.Color{R: 200, G: 200, B: 200}
 
 	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
-		FontName:     "openSans",
+		FontName:     "OpenSans",
 		FontGapY:     1.3,
 		FontSize:     iv.defaultFontSize,
 		MarginLeft:   iv.marginLeft,
@@ -156,7 +156,9 @@ func (iv *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return nil, err
 	}
 
-	iv.printMimeImg(pdfGen)
+	if iv.pdfData.SenderInfo.MimeLogoUrl != "" {
+		iv.printMimeImg(pdfGen)
+	}
 	iv.printAddressee(pdfGen, lineColor)
 	iv.printMetaData(pdfGen, lineColor)
 	iv.printHeadlineAndOpeningText(pdfGen)
@@ -195,21 +197,49 @@ func (iv *Invoice) printAddressee(pdfGen *generator.PDFGenerator, lineColor gene
 	//Anschrift Sender small
 	pdfGen.SetCursor(iv.marginLeft, 49)
 	pdfGen.SetFontSize(iv.smallFontSize)
-	addressSenderSmallText := fmt.Sprintf("%s,%s %s, %s %s %s",
-		iv.pdfData.SenderAddress.CompanyName,
+
+	var addressSenderSmallText = ""
+
+	addressSenderSmallText += iv.pdfData.SenderAddress.CompanyName
+	if iv.pdfData.SenderAddress.CompanyName != "" && (iv.pdfData.SenderAddress.FullForename != "" || iv.pdfData.SenderAddress.FullSurname != "") {
+		addressSenderSmallText += ", "
+	}
+
+	addressSenderSmallText += iv.pdfData.SenderAddress.FullForename
+	if iv.pdfData.SenderAddress.FullSurname != "" {
+		addressSenderSmallText += " "
+	}
+	addressSenderSmallText += iv.pdfData.SenderAddress.FullSurname
+
+	addressSenderSmallText += fmt.Sprintf(" - %s %s",
 		iv.pdfData.SenderAddress.Address.Road,
 		iv.pdfData.SenderAddress.Address.HouseNumber,
+	)
+
+	if iv.pdfData.SenderAddress.Address.StreetSupplement != "" {
+		addressSenderSmallText += " "
+		addressSenderSmallText += iv.pdfData.SenderAddress.Address.StreetSupplement
+	}
+
+	addressSenderSmallText += fmt.Sprintf(", %s %s %s",
 		iv.pdfData.SenderAddress.Address.CountryCode,
 		iv.pdfData.SenderAddress.Address.ZipCode,
-		iv.pdfData.SenderAddress.Address.CityName)
+		iv.pdfData.SenderAddress.Address.CityName,
+	)
+
 	pdfGen.PrintPdfText(addressSenderSmallText, "", "L")
 	pdfGen.SetFontSize(iv.defaultFontSize)
 
 	//Anschrift Empfänger
 	pdfGen.SetCursor(iv.marginLeft, 56)
-	pdfGen.PrintLnPdfText(iv.pdfData.ReceiverAddress.CompanyName, "", "L")
-	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.FullForename, iv.pdfData.ReceiverAddress.FullSurname),
-		"", "L")
+	if iv.pdfData.ReceiverAddress.CompanyName != "" {
+		pdfGen.PrintLnPdfText(iv.pdfData.ReceiverAddress.CompanyName, "", "L")
+
+	}
+	if iv.pdfData.ReceiverAddress.FullForename != "" || iv.pdfData.ReceiverAddress.FullSurname != "" {
+		pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.FullForename, iv.pdfData.ReceiverAddress.FullSurname),
+			"", "L")
+	}
 	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", iv.pdfData.ReceiverAddress.Address.Road, iv.pdfData.ReceiverAddress.Address.HouseNumber),
 		"", "L")
 	if iv.pdfData.ReceiverAddress.Address.StreetSupplement != "" {
