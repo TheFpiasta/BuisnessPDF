@@ -3,6 +3,7 @@ package pdfType
 import (
 	"SimpleInvoice/generator"
 	"encoding/json"
+	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -12,11 +13,12 @@ import (
 )
 
 type Invoice struct {
-	data          invoiceRequestData
-	meta          PdfMeta
-	logger        *zerolog.Logger
-	printErrStack bool
-	pdfGen        *generator.PDFGenerator
+	data             invoiceRequestData
+	meta             PdfMeta
+	logger           *zerolog.Logger
+	printErrStack    bool
+	pdfGen           *generator.PDFGenerator
+	defaultLineColor generator.Color
 }
 
 type invoiceRequestData struct {
@@ -63,8 +65,9 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 				SizeLarge:   15,
 			},
 		},
-		logger:        logger,
-		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
+		logger:           logger,
+		printErrStack:    logger.GetLevel() <= zerolog.DebugLevel,
+		defaultLineColor: generator.Color{R: 200, G: 200, B: 200},
 	}
 }
 
@@ -110,8 +113,6 @@ func (i *Invoice) LogError(err error) {
 func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.logger.Debug().Msg("generate invoice")
 
-	lineColor := generator.Color{R: 200, G: 200, B: 200}
-
 	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
 		FontName:     "OpenSans",
 		FontGapY:     1.3,
@@ -133,12 +134,13 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		i.printMimeImg()
 	}
 
-	i.printAddressee(lineColor)
-	i.printMetaData(pdfGen, lineColor)
+	i.printAddressee()
+	i.printMetaData(pdfGen)
 	i.printHeadlineAndOpeningText(pdfGen)
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
-	letterFooter(i.pdfGen, i.meta, i.data.SenderInfo, i.data.SenderAddress, lineColor)
+	i.printFooter(pdfGen)
+	i.printFooter(pdfGen)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
@@ -148,7 +150,7 @@ func (i *Invoice) printMimeImg() {
 	mimeImg(i.pdfGen, i.data.SenderInfo.MimeLogoUrl, pageWidth-i.meta.Margin.Right, 15, i.data.SenderInfo.MimeLogoScale)
 }
 
-func (i *Invoice) printAddressee(lineColor generator.Color) {
+func (i *Invoice) printAddressee() {
 	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
 	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
 
@@ -158,9 +160,9 @@ func (i *Invoice) printAddressee(lineColor generator.Color) {
 	letterReceiverAddress(i.pdfGen, i.data.ReceiverAddress, i.meta.Margin.Left, 56)
 }
 
-func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator, lineColor generator.Color) {
+func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-	pdfGen.DrawLine(i.meta.Margin.Left+98, 56, i.meta.Margin.Left+98, 80, lineColor, 0)
+	pdfGen.DrawLine(i.meta.Margin.Left+98, 56, i.meta.Margin.Left+98, 80, i.defaultLineColor, 0)
 	pdfGen.SetCursor(i.meta.Margin.Left+100, 56)
 	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
 	pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
@@ -271,4 +273,36 @@ func (i *Invoice) printClosingText(pdfGen *generator.PDFGenerator) {
 	pdfGen.NewLine(i.meta.Margin.Left)
 	pdfGen.NewLine(i.meta.Margin.Left)
 	pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
+}
+
+func (i *Invoice) printFooter(pdfGen *generator.PDFGenerator) {
+	const startAtY = 261
+	const startPageNumberY = 282
+	const gabY = 3
+
+	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+
+	pdfGen.SetFontSize(i.meta.Font.SizeSmall)
+	pdfGen.DrawLine(i.meta.Margin.Left, startAtY, pageWidth-i.meta.Margin.Right, startAtY, i.defaultLineColor, 0)
+
+	pdfGen.SetCursor(i.meta.Margin.Left, startAtY+gabY)
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.Web, "", "L")
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.Phone, "", "L")
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.Email, "", "L")
+
+	pdfGen.SetCursor(pageWidth/2, startAtY+gabY)
+	pdfGen.PrintLnPdfText(i.data.SenderAddress.CompanyName, "", "C")
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", i.data.SenderAddress.Address.Road, i.data.SenderAddress.Address.HouseNumber), "", "C")
+	pdfGen.PrintLnPdfText(i.data.SenderAddress.Address.ZipCode+" "+i.data.SenderAddress.Address.CityName, "", "C")
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.TaxNumber, "", "C")
+
+	pdfGen.SetCursor(pageWidth+i.meta.Margin.Right, startAtY+gabY)
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.BankName, "", "R")
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.Iban, "", "R")
+	pdfGen.PrintLnPdfText(i.data.SenderInfo.Bic, "", "R")
+
+	pdfGen.DrawLine(i.meta.Margin.Left, startPageNumberY, pageWidth-i.meta.Margin.Right, startPageNumberY, i.defaultLineColor, 0)
+	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
+	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
+	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 }

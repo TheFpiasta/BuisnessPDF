@@ -24,32 +24,6 @@ func letterAddressSenderSmall(pdfGen *generator.PDFGenerator, address string, po
 	pdfGen.PrintPdfText(address, "", "L")
 }
 
-func letterFooter(pdfGen *generator.PDFGenerator, meta PdfMeta, senderInfo SenderInfo, senderAddress FullPersonInfo, lineColor generator.Color) {
-	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
-
-	pdfGen.SetFontSize(meta.Font.SizeSmall)
-	pdfGen.DrawLine(meta.Margin.Left, 261, pageWidth-meta.Margin.Right, 261, lineColor, 0)
-	pdfGen.SetCursor(meta.Margin.Left, 264)
-	pdfGen.PrintLnPdfText(senderInfo.Web, "", "L")
-	pdfGen.PrintLnPdfText(senderInfo.Phone, "", "L")
-	pdfGen.PrintLnPdfText(senderInfo.Email, "", "L")
-	pdfGen.SetCursor(105, 264)
-	pdfGen.PrintLnPdfText(senderAddress.CompanyName, "", "C")
-	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", senderAddress.Address.Road, senderAddress.Address.HouseNumber), "", "C")
-	pdfGen.PrintLnPdfText(senderAddress.Address.ZipCode+" "+senderAddress.Address.CityName, "", "C")
-	pdfGen.PrintLnPdfText(senderInfo.TaxNumber, "", "C")
-	pdfGen.SetCursor(190, 264)
-	pdfGen.PrintLnPdfText(senderInfo.BankName, "", "R")
-	pdfGen.PrintLnPdfText(senderInfo.Iban, "", "R")
-	pdfGen.PrintLnPdfText(senderInfo.Bic, "", "R")
-	pdfGen.DrawLine(meta.Margin.Left, 282, pageWidth-meta.Margin.Right, 282, lineColor, 0)
-	pdfGen.SetFontSize(meta.Font.SizeDefault)
-	pdfGen.SetCursor(pageWidth/2, 285)
-	pdfGen.SetFontSize(meta.Font.SizeSmall)
-	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
-	pdfGen.SetFontSize(meta.Font.SizeDefault)
-}
-
 func letterReceiverAddress(pdfGen *generator.PDFGenerator, receiverAddress FullPersonInfo, posX float64, posY float64) {
 	pdfGen.SetCursor(posX, posY)
 	if receiverAddress.CompanyName != "" {
