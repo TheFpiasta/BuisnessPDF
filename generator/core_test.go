@@ -2,10 +2,15 @@ package generator
 
 import (
 	"github.com/jung-kurt/gofpdf"
+	"github.com/rs/zerolog"
 	"net/url"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
+
+var _logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).Level(zerolog.DebugLevel).With().Timestamp().Logger()
 
 func TestNewPDFGenerator(t *testing.T) {
 	type args struct {
@@ -20,7 +25,7 @@ func TestNewPDFGenerator(t *testing.T) {
 		{
 			name: "no error",
 			args: args{
-				data:                defaultMetaData,
+				data:                _defaultMetaData,
 				strictErrorHandling: false,
 			},
 			wantErr: false,
@@ -28,7 +33,7 @@ func TestNewPDFGenerator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling)
+			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling, &_logger)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPDFGenerator() error = %v, wantErr %v", err, tt.wantErr)
@@ -88,35 +93,35 @@ func TestPDFGenerator_NewLine(t *testing.T) {
 	}{
 		{
 			name:    "default",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{oldX: 15.3},
 			wantErr: false,
 		},
 		{
 			name: "font size * 3.14159",
 			data: MetaData{
-				FontName:     defaultMetaData.FontName,
-				FontGapY:     defaultMetaData.FontGapY,
-				FontSize:     defaultMetaData.FontSize * 3.14159,
-				MarginLeft:   defaultMetaData.MarginLeft,
-				MarginTop:    defaultMetaData.MarginTop,
-				MarginRight:  defaultMetaData.MarginRight,
-				MarginBottom: defaultMetaData.MarginBottom,
-				Unit:         defaultMetaData.Unit,
+				FontName:     _defaultMetaData.FontName,
+				FontGapY:     _defaultMetaData.FontGapY,
+				FontSize:     _defaultMetaData.FontSize * 3.14159,
+				MarginLeft:   _defaultMetaData.MarginLeft,
+				MarginTop:    _defaultMetaData.MarginTop,
+				MarginRight:  _defaultMetaData.MarginRight,
+				MarginBottom: _defaultMetaData.MarginBottom,
+				Unit:         _defaultMetaData.Unit,
 			},
 			args:    args{oldX: 15.3},
 			wantErr: false,
 		},
 		{
 			name:    "to small old x",
-			data:    defaultMetaData,
+			data:    _defaultMetaData,
 			args:    args{oldX: -0.1},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -157,7 +162,7 @@ func TestPDFGenerator_PlaceMimeImageFromUrl(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false)
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -169,81 +174,154 @@ func TestPDFGenerator_PlaceMimeImageFromUrl(t *testing.T) {
 }
 
 func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		text     string
 		styleStr string
 		alignStr string
 	}
+
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "normal print",
+			data: _defaultMetaData,
+			args: args{
+				text:     "Test abc",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: false,
+		},
+		{
+			name: "no text",
+			data: _defaultMetaData,
+			args: args{
+				text:     "Test abc",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: true,
+		},
+		{
+			name: "long text",
+			data: _defaultMetaData,
+			args: args{
+				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
+					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
+					"sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. " +
+					"Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
+			wantX, wantY := core.pdf.GetXY()
+			_, lineHeight := core.pdf.GetFontSize()
+			wantY += lineHeight + core.data.FontGapY
+
 			core.PrintLnPdfText(tt.args.text, tt.args.styleStr, tt.args.alignStr)
+			if core.GetError() != nil && !tt.wantErr {
+				t.Error(err.Error())
+				return
+			}
+
+			gotX, gotY := core.pdf.GetXY()
+
+			if wantX != gotX || wantY != gotY {
+				t.Errorf("PrintLnPdfText() got x y = %v %v, want %v %v", gotX, gotY, wantX, wantY)
+			}
 		})
 	}
 }
 
 func TestPDFGenerator_PrintPdfText(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		text     string
 		styleStr string
 		alignStr string
 	}
+
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "normal print",
+			data: _defaultMetaData,
+			args: args{
+				text:     "Test abc",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: false,
+		},
+		{
+			name: "no text",
+			data: _defaultMetaData,
+			args: args{
+				text:     "Test abc",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: true,
+		},
+		{
+			name: "long text",
+			data: _defaultMetaData,
+			args: args{
+				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
+					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
+					"sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. " +
+					"Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+				styleStr: "b",
+				alignStr: "L",
+			},
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
+			currentX, currentY := core.pdf.GetXY()
+
 			core.PrintPdfText(tt.args.text, tt.args.styleStr, tt.args.alignStr)
+			if core.GetError() != nil && !tt.wantErr {
+				t.Error(err.Error())
+				return
+			}
+
+			gotX, gotY := core.pdf.GetXY()
+
+			if currentX >= gotX || currentY != gotY {
+				t.Errorf("PrintLnPdfText() got x y = %v %v, want x > %v and y = %v", gotX, gotY, currentX, currentY)
+			}
 		})
 	}
 }
 
 func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		text            string
 		styleStr        string
@@ -255,22 +333,117 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 		cellWidth       float64
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name    string
+		data    MetaData
+		args    args
+		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "normal print",
+			data: _defaultMetaData,
+			args: args{
+				text:            "Test abc",
+				styleStr:        "b",
+				alignStr:        "L",
+				borderStr:       "1",
+				fill:            false,
+				backgroundColor: Color{0, 0, 58},
+				cellHeight:      60,
+				cellWidth:       100,
+			},
+			wantErr: false,
+		},
+		{
+			name: "no text",
+			data: _defaultMetaData,
+			args: args{
+				text:            "Test abc",
+				styleStr:        "b",
+				alignStr:        "L",
+				borderStr:       "",
+				fill:            false,
+				backgroundColor: Color{100, 100, 100},
+				cellHeight:      10,
+				cellWidth:       10,
+			},
+			wantErr: false,
+		},
+		{
+			name: "long text",
+			data: _defaultMetaData,
+			args: args{
+				text: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " +
+					"sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
+					"sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. " +
+					"Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+				styleStr:        "b",
+				alignStr:        "L",
+				borderStr:       "1L",
+				fill:            true,
+				backgroundColor: Color{30, 48, 64},
+				cellHeight:      80,
+				cellWidth:       90,
+			},
+			wantErr: false,
+		},
+		{
+			name: "wrong cellHeight",
+			data: _defaultMetaData,
+			args: args{
+				text:            "Test",
+				styleStr:        "",
+				alignStr:        "",
+				borderStr:       "",
+				fill:            false,
+				backgroundColor: Color{30, 48, 64},
+				cellHeight:      0,
+				cellWidth:       90,
+			},
+			wantErr: true,
+		},
+		{
+			name: "wrong cellWidth",
+			data: _defaultMetaData,
+			args: args{
+				text:            "Test",
+				styleStr:        "",
+				alignStr:        "",
+				borderStr:       "",
+				fill:            false,
+				backgroundColor: Color{30, 48, 64},
+				cellHeight:      10,
+				cellWidth:       0,
+			},
+			wantErr: true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
+			wantX, wantY := core.pdf.GetXY()
+			wantX += tt.args.cellWidth
+
 			core.PrintPdfTextFormatted(tt.args.text, tt.args.styleStr, tt.args.alignStr, tt.args.borderStr, tt.args.fill, tt.args.backgroundColor, tt.args.cellHeight, tt.args.cellWidth)
+			if core.GetError() != nil && !tt.wantErr {
+				t.Error(err.Error())
+				return
+			}
+
+			if core.GetError() != nil && tt.wantErr {
+				return
+			}
+
+			gotX, gotY := core.pdf.GetXY()
+
+			if wantX != gotX || wantY != gotY {
+				t.Errorf("PrintLnPdfText() got x y = %v %v, want %v %v", gotX, gotY, wantX, wantY)
+			}
 		})
 	}
 }
@@ -377,64 +550,82 @@ func TestPDFGenerator_PrintTableHeader(t *testing.T) {
 	}
 }
 
-func TestPDFGenerator_addNewPageIfNecessary(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
-			}
-			core.addNewPageIfNecessary()
-		})
-	}
-}
+//addNewPageIfNecessary currently not implemented
+//func TestPDFGenerator_addNewPageIfNecessary(t *testing.T) {
+//	type fields struct {
+//		pdf                 *gofpdf.Fpdf
+//		data                MetaData
+//		maxSaveX            float64
+//		maxSaveY            float64
+//		strictErrorHandling bool
+//	}
+//	tests := []struct {
+//		name   string
+//		fields fields
+//	}{
+//		// TODO: Add test cases.
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			core := &PDFGenerator{
+//				pdf:                 tt.fields.pdf,
+//				data:                tt.fields.data,
+//				maxSaveX:            tt.fields.maxSaveX,
+//				maxSaveY:            tt.fields.maxSaveY,
+//				strictErrorHandling: tt.fields.strictErrorHandling,
+//			}
+//			core.addNewPageIfNecessary()
+//		})
+//	}
+//}
 
 func TestPDFGenerator_extractLinesFromText(t *testing.T) {
-	type fields struct {
-		pdf                 *gofpdf.Fpdf
-		data                MetaData
-		maxSaveX            float64
-		maxSaveY            float64
-		strictErrorHandling bool
-	}
 	type args struct {
 		text string
 	}
 	tests := []struct {
 		name          string
-		fields        fields
+		data          MetaData
 		args          args
 		wantTextLines []string
 	}{
-		// TODO: Add test cases.
+		{
+			name:          "default",
+			data:          _defaultMetaData,
+			args:          args{text: "Hi\nFrom \nThe\n Test \n !!!1!11\n"},
+			wantTextLines: []string{"Hi", "From ", "The", "Test ", "!!!1!11", ""},
+		},
+		{
+			name:          "nothing to do",
+			data:          _defaultMetaData,
+			args:          args{text: ""},
+			wantTextLines: []string{""},
+		},
+		{
+			name:          "only \\n",
+			data:          _defaultMetaData,
+			args:          args{text: "\n"},
+			wantTextLines: []string{"", ""},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core := &PDFGenerator{
-				pdf:                 tt.fields.pdf,
-				data:                tt.fields.data,
-				maxSaveX:            tt.fields.maxSaveX,
-				maxSaveY:            tt.fields.maxSaveY,
-				strictErrorHandling: tt.fields.strictErrorHandling,
+			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			if err != nil {
+				t.Errorf("init core error\n%s", err.Error())
+				return
 			}
+
 			if gotTextLines := core.extractLinesFromText(tt.args.text); !reflect.DeepEqual(gotTextLines, tt.wantTextLines) {
-				t.Errorf("extractLinesFromText() = %v, want %v", gotTextLines, tt.wantTextLines)
+				var gotTmp []string
+				var wantTmp []string
+				for _, line := range gotTextLines {
+					gotTmp = append(gotTmp, "\""+line+"\"")
+				}
+				for _, line := range tt.wantTextLines {
+					wantTmp = append(wantTmp, "\""+line+"\"")
+				}
+				t.Errorf("extractLinesFromText() = \n%v, want \n%v", "["+strings.Join(gotTmp, ", ")+"]", "["+strings.Join(wantTmp, ", ")+"]")
 			}
 		})
 	}
