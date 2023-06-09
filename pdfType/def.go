@@ -1,20 +1,63 @@
-package invoice
+package pdfType
 
 import (
-	"encoding/json"
-	"io"
+	"github.com/jung-kurt/gofpdf"
 	"net/http"
 )
 
-func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			iv.LogError(err)
-		}
-	}(request.Body)
+type PdfType interface {
+	SetDataFromRequest(request *http.Request) (err error)
+	GeneratePDF() (*gofpdf.Fpdf, error)
+	LogError(err error)
 
-	return json.NewDecoder(request.Body).Decode(&iv.pdfData)
+	validateData() (err error)
+}
+
+type PdfMeta struct {
+	Margin pdfMargin
+	Font   pdfFont
+}
+
+type pdfFont struct {
+	FontName    string
+	SizeDefault float64
+	SizeSmall   float64
+	SizeLarge   float64
+}
+
+type pdfMargin struct {
+	Left   float64
+	Right  float64
+	Top    float64
+	Bottom float64
+}
+
+type FullPersonInfo struct {
+	FullForename string `json:"fullForename"`
+	FullSurname  string `json:"fullSurname"`
+	CompanyName  string `json:"companyName"`
+	Supplement   string `json:"supplement"`
+	Address      struct {
+		Road             string `json:"road"`
+		HouseNumber      string `json:"houseNumber"`
+		StreetSupplement string `json:"streetSupplement"`
+		ZipCode          string `json:"zipCode"`
+		CityName         string `json:"cityName"`
+		Country          string `json:"country"`
+		CountryCode      string `json:"countryCode"`
+	} `json:"address"`
+}
+
+type SenderInfo struct {
+	Phone         string  `json:"phone"`
+	Web           string  `json:"web"`
+	Email         string  `json:"email"`
+	MimeLogoUrl   string  `json:"mimeLogoUrl"`
+	MimeLogoScale float64 `json:"mimeLogoScale"`
+	Iban          string  `json:"iban"`
+	Bic           string  `json:"bic"`
+	TaxNumber     string  `json:"taxNumber"`
+	BankName      string  `json:"bankName"`
 }
 
 // todo übernehmen von https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body ?
@@ -121,7 +164,3 @@ func (iv *Invoice) parseJsonData(request *http.Request) (err error) {
 //
 //	fmt.Fprintf(w, "Person: %+v", p)
 //}
-
-func (iv *Invoice) validateJsonData() (err error) {
-	return nil
-}

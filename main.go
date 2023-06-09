@@ -1,8 +1,9 @@
 package main
 
 import (
-	"SimpleInvoice/invoice"
+	"SimpleInvoice/pdfType"
 	"fmt"
+	errorsWithStack "github.com/go-errors/errors"
 	"github.com/rs/zerolog"
 	"log"
 	"net/http"
@@ -14,39 +15,55 @@ import (
 
 var logger zerolog.Logger
 
-func pdfPage(w http.ResponseWriter, r *http.Request) {
+func invoiceRequest(w http.ResponseWriter, r *http.Request) {
+	handler := pdfType.NewInvoice(&logger)
 
-	invoiceHandler := invoice.New(&logger)
-	err := invoiceHandler.SetJsonInvoiceData(r)
+	err := handler.SetDataFromRequest(r)
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	pdf, err := invoiceHandler.GeneratePDF()
+	pdf, err := handler.GeneratePDF()
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logError(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = pdf.Output(w)
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logError(err)
 	}
 }
 
-func homePage(w http.ResponseWriter, request *http.Request) {
-	logger.Debug().Msg("Endpoint Hit: homePage")
-	_, err := fmt.Fprintf(w, "Hello from the PDF-API")
+func deliveryNodeRequest(w http.ResponseWriter, r *http.Request) {
+	handler := pdfType.NewDeliveryNode(&logger)
+
+	err := handler.SetDataFromRequest(r)
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logError(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	pdf, err := handler.GeneratePDF()
+	if err != nil {
+		logError(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = pdf.Output(w)
+	if err != nil {
+		logError(err)
 	}
 }
 
 func handleRequests() {
-	http.HandleFunc("/pdf", pdfPage)
-	http.HandleFunc("/", homePage)
+	http.HandleFunc("/invoice", invoiceRequest)
+	http.HandleFunc("/delivery-node", deliveryNodeRequest)
 	logger.Debug().Msg("start server on localhost:10000")
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
@@ -63,7 +80,7 @@ func main() {
 	}
 
 	if openBrowserOnStartup {
-		go openBrowser("http://localhost:10000/pdf")
+		go openBrowser("http://localhost:10000/")
 	}
 
 	handleRequests()
@@ -130,4 +147,17 @@ func initLogger(loggingLevel int, logDir string) (err error) {
 	}
 
 	return nil
+}
+
+func logError(err error) {
+	var errStr string
+	const printErrStack = true
+
+	if _, ok := err.(*errorsWithStack.Error); ok && printErrStack {
+		errStr = err.(*errorsWithStack.Error).ErrorStack()
+	} else {
+		errStr = err.Error()
+	}
+
+	logger.Error().Msgf(errStr)
 }

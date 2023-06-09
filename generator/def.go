@@ -2,6 +2,7 @@ package generator
 
 import (
 	"github.com/jung-kurt/gofpdf"
+	"github.com/rs/zerolog"
 	"net/url"
 )
 
@@ -13,6 +14,7 @@ type PDFGenerator struct {
 	maxSaveX            float64
 	maxSaveY            float64
 	strictErrorHandling bool
+	logger              *zerolog.Logger
 }
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
