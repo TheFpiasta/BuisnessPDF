@@ -296,7 +296,7 @@ func (i *Invoice) printFooter(pdfGen *generator.PDFGenerator) {
 	pdfGen.PrintLnPdfText(i.data.SenderAddress.Address.ZipCode+" "+i.data.SenderAddress.Address.CityName, "", "C")
 	pdfGen.PrintLnPdfText(i.data.SenderInfo.TaxNumber, "", "C")
 
-	pdfGen.SetCursor(pageWidth+i.meta.Margin.Right, startAtY+gabY)
+	pdfGen.SetCursor(pageWidth-i.meta.Margin.Right, startAtY+gabY)
 	pdfGen.PrintLnPdfText(i.data.SenderInfo.BankName, "", "R")
 	pdfGen.PrintLnPdfText(i.data.SenderInfo.Iban, "", "R")
 	pdfGen.PrintLnPdfText(i.data.SenderInfo.Bic, "", "R")
