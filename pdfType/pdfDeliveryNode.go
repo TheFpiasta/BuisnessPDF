@@ -222,7 +222,15 @@ func (d *DeliveryNode) printSignatureSection(pdfGen *generator.PDFGenerator) {
 	pageWidth, _ := d.pdfGen.GetPdf().GetPageSize()
 	var startSupplierX = d.meta.Margin.Left
 	var startCustomerX = pageWidth / 2.0
-	d.printSignaturePart(pdfGen, "Lehamnn's Fotobox", startSupplierX, startSignatureSectionOnPosY, d.defaultLineColor)
+	var senderSignatureName string
+
+	if d.data.SenderAddress.CompanyName != "" {
+		senderSignatureName = d.data.SenderAddress.CompanyName
+	} else {
+		senderSignatureName = "Lieferant"
+	}
+
+	d.printSignaturePart(pdfGen, senderSignatureName, startSupplierX, startSignatureSectionOnPosY, d.defaultLineColor)
 	d.printSignaturePart(pdfGen, "Kunde", startCustomerX, startSignatureSectionOnPosY, d.defaultLineColor)
 
 }
