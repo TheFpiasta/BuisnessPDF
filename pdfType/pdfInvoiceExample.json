@@ -1,0 +1,74 @@
+{
+  "senderAddress": {
+    "fullForename": "Max",
+    "fullSurname": "Mustermann",
+    "companyName": "Musterfirma GbR",
+    "supplement": "Max Mustermann & Erika Mustermann",
+    "address": {
+      "road": "Musterstraße",
+      "houseNumber": "42",
+      "streetSupplement": "",
+      "zipCode": "01234",
+      "cityName": "Musterstadt",
+      "country": "Germany",
+      "countryCode": "DE"
+    }
+  },
+  "receiverAddress": {
+    "fullForename": "Otto",
+    "fullSurname": "Normalverbraucher",
+    "companyName": "",
+    "supplement": "Dr.",
+    "address": {
+      "road": "CrafingStraße",
+      "houseNumber": "11a",
+      "streetSupplement": "2.OG",
+      "zipCode": "04321",
+      "cityName": "Catcity",
+      "country": "Germany",
+      "countryCode": "DE"
+    }
+  },
+  "senderInfo": {
+    "phone": "+49 (0) 123456789",
+    "email": "hello@musterfirma.de",
+    "web": "musterfirma.de",
+    "logoSvg": "https://cdn.pictro.de/Test/logoTest.png",
+    "iban": "DE123456789",
+    "bic": "XXX123456",
+    "taxNumber": "123/456/789",
+    "bankName": "Musterbank"
+  },
+  "invoiceMeta": {
+    "invoiceNumber": "XI-23045",
+    "invoiceDate": "11.0.2023",
+    "customerNumber": "K-321"
+  },
+  "InvoiceBody": {
+    "openingText": "Hello, /n this is the opening line.",
+    "headlineText": "Headline is here",
+    "serviceTimeText": "service time: from DATE one to DATE two",
+    "closingText": "And hire is the closing line. /n/n If you would like to contribute to SimpleInvoice, please fork the repository and submit a pull request. Contributions are always welcome, and we appreciate your help in making SimpleInvoice even better!",
+    "ustNotice": "Ust notice can stay here",
+    "invoicedItems": [
+      {
+        "positionNumber": "1",
+        "quantity": 50.7,
+        "unit": "h",
+        "description": "Programming",
+        "singlePrice": 8550,
+        "currency": "€",
+        "taxRate": 14
+      },
+      {
+        "positionNumber": "2",
+        "quantity": 29.3,
+        "unit": "h",
+        "description": "Testing",
+        "singlePrice": 7000,
+        "currency": "€",
+        "taxRate": 14
+      }
+    ]
+  }
+}
