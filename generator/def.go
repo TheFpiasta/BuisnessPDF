@@ -97,3 +97,31 @@ type Color struct {
 	G uint8
 	B uint8
 }
+
+// German and international business letter DIN-5008 Form A
+const (
+	FontSizeSmall  = 10
+	FontSizeMiddle = 11
+	FontSizeBig    = 12
+
+	FontGabSmall  = 3
+	FontGabMiddle = 3.3
+	FontGabBig    = 3.6
+
+	MetaInfoSTartY = 32
+	MetaInfoStartX = 128
+	MetaInfoMaxX   = 203
+	MetaInfoMaxY   = 107
+	MetaInfoMinY   = 72
+
+	AddressMarginLeft   = 25
+	AddressStartY       = 27
+	AddressEnd          = 72
+	AddressMaxLength    = 80
+	AddressZoneSender   = 17.7
+	AddressZoneReceiver = 27.3
+
+	BodyStartY      = 103.46
+	BodyLeftMargin  = 25
+	BodyRightMargin = 20
+)
