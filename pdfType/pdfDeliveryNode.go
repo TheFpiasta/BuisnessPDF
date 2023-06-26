@@ -115,7 +115,11 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 		MarginRight:  d.meta.Margin.Right,
 		MarginBottom: d.meta.Margin.Bottom,
 		Unit:         "mm",
-	}, false, d.logger)
+	}, false, d.logger, func() {
+
+	}, func(isLastPage bool) {
+
+	})
 
 	if err != nil {
 		return nil, err
