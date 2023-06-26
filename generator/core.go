@@ -377,6 +377,7 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	}
 	// <--
 
+	// ----- TODO registerMimeImageToPdf()
 	var rsp *http.Response
 
 	rsp, err := http.Get(cdnUrl.String())
@@ -387,6 +388,8 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 
 	imageMimeType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
 	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.String(), imageMimeType, rsp.Body)
+
+	// -----TODO addRegisteredMimeImageToPage()
 
 	posX, posY := core.GetCursor()
 	imgWd, imgHt := imageInfoType.Extent()
@@ -590,9 +593,14 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 	}
 }
 
-func (core *PDFGenerator) addNewPageIfNecessary() {
-	//var currentYPos float64
-	//var maxSaveYPos float64
+func (core *PDFGenerator) SetHeaderFunction(f func()) {
+	core.pdf.SetHeaderFunc(f)
+}
 
-	//todo implement?
+func (core *PDFGenerator) SetFooterFunction(f func(isLastPage bool)) {
+	core.pdf.SetFooterFuncLpi(f)
+}
+
+func (core *PDFGenerator) NextPage() {
+	core.pdf.AddPage()
 }

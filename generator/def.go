@@ -89,6 +89,10 @@ type Generator interface {
 	GetCursor() (x float64, y float64)
 	SetCursor(x float64, y float64)
 	SetUnsafeCursor(x float64, y float64)
+
+	SetHeaderFunction(f func())
+	SetFooterFunction(f func(isLastPage bool))
+	NextPage()
 }
 
 // Color represents a specific color in red, green and blue values, each from 0 to 255

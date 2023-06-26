@@ -128,19 +128,24 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		return nil, err
 	}
 
-	i.pdfGen = pdfGen
+	pdfGen.SetFooterFunction(func(isLastPage bool) {
+		i.printFooter()
+	})
 
-	if i.data.SenderInfo.MimeLogoUrl != "" {
-		i.printMimeImg()
-	}
+	pdfGen.SetHeaderFunction(func() {
+		if i.data.SenderInfo.MimeLogoUrl != "" {
+			i.printMimeImg()
+		}
+	})
+
+	i.pdfGen = pdfGen
 
 	i.printAddressee()
 	i.printMetaData(pdfGen)
 	i.printHeadlineAndOpeningText(pdfGen)
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
-	i.printFooter(pdfGen)
-	i.printFooter(pdfGen)
+	i.pdfGen.NextPage()
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
@@ -275,7 +280,9 @@ func (i *Invoice) printClosingText(pdfGen *generator.PDFGenerator) {
 	pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
 }
 
-func (i *Invoice) printFooter(pdfGen *generator.PDFGenerator) {
+func (i *Invoice) printFooter() {
+	pdfGen := i.pdfGen
+
 	const startAtY = 261
 	const startPageNumberY = 282
 	const gabY = 3
