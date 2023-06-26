@@ -126,6 +126,7 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	}
 
 	d.pdfGen = pdfGen
+	d.pdfGen.NextPage()
 
 	if d.data.SenderInfo.MimeLogoUrl != "" {
 		d.printMimeImg()

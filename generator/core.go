@@ -69,9 +69,8 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 
 	pdf.SetHeaderFuncMode(headerFunction, true)
 	pdf.SetFooterFuncLpi(footerFunction)
-
-	pdf.AddPage()
 	pdf.SetHomeXY()
+
 	if pdf.Err() {
 		return nil, pdf.Error()
 	}

@@ -139,15 +139,13 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	}
 
 	i.pdfGen = pdfGen
+	i.pdfGen.NextPage()
 
 	i.printAddressee()
 	i.printMetaData(pdfGen)
 	i.printHeadlineAndOpeningText(pdfGen)
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
-
-	i.pdfGen.NextPage()
-	i.pdfGen.NextPage()
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
