@@ -19,7 +19,7 @@ import (
 // If strictErrorHandling is set to false, all methods are tried to execute executed, even if a pdf internal error is set.
 // This may cause the PDF internal error to be overwritten by a new error.
 // Use GetError() to get the current pdf internal error.
-func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Logger) (gen *PDFGenerator, err error) {
+func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Logger, headerFunction func(), footerFunction func(isLastPage bool)) (gen *PDFGenerator, err error) {
 	// --> validate inputs
 	if data.FontGapY < 0 {
 		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed.", data.FontGapY))
@@ -66,6 +66,10 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 	//pdf.AliasNbPages("{entute}")
 	//pdf.SetHeaderFuncMode(, true)
 	//pdf.SetFooterFunc()
+
+	pdf.SetHeaderFuncMode(headerFunction, true)
+	pdf.SetFooterFuncLpi(footerFunction)
+
 	pdf.AddPage()
 	pdf.SetHomeXY()
 	if pdf.Err() {
@@ -591,14 +595,6 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 
 		core.SetCursor(referenceX, core.pdf.GetY()+newlineHeight)
 	}
-}
-
-func (core *PDFGenerator) SetHeaderFunction(f func()) {
-	core.pdf.SetHeaderFunc(f)
-}
-
-func (core *PDFGenerator) SetFooterFunction(f func(isLastPage bool)) {
-	core.pdf.SetFooterFuncLpi(f)
 }
 
 func (core *PDFGenerator) NextPage() {

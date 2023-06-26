@@ -122,21 +122,21 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		MarginRight:  i.meta.Margin.Right,
 		MarginBottom: i.meta.Margin.Bottom,
 		Unit:         "mm",
-	}, false, i.logger)
+	},
+		false,
+		i.logger,
+		func() {
+			if i.data.SenderInfo.MimeLogoUrl != "" {
+				i.printMimeImg()
+			}
+		},
+		func(isLastPage bool) {
+			i.printFooter()
+		})
 
 	if err != nil {
 		return nil, err
 	}
-
-	pdfGen.SetFooterFunction(func(isLastPage bool) {
-		i.printFooter()
-	})
-
-	pdfGen.SetHeaderFunction(func() {
-		if i.data.SenderInfo.MimeLogoUrl != "" {
-			i.printMimeImg()
-		}
-	})
 
 	i.pdfGen = pdfGen
 
@@ -145,6 +145,9 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.printHeadlineAndOpeningText(pdfGen)
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
+
+	i.pdfGen.NextPage()
+	i.pdfGen.NextPage()
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }

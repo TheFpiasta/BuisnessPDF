@@ -90,8 +90,6 @@ type Generator interface {
 	SetCursor(x float64, y float64)
 	SetUnsafeCursor(x float64, y float64)
 
-	SetHeaderFunction(f func())
-	SetFooterFunction(f func(isLastPage bool))
 	NextPage()
 }
 
