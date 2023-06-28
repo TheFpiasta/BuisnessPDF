@@ -198,7 +198,8 @@ func (d *DeliveryNode) printDeliveryTable(pdfGen *generator.PDFGenerator) {
 				germanNumber(int(item.Quantity)) + " " + item.Unit,
 				item.Description,
 				"",
-			})
+			},
+		)
 	}
 
 	var headerCells = []string{"Pos", "Anzahl", "Beschreibung", "Notiz"}

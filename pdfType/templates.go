@@ -53,3 +53,15 @@ func getColumnWithFromPercentage(pdfGen *generator.PDFGenerator, columnPercent [
 	}
 	return columnWidth
 }
+
+func din5008aSenderAdresse(gen *generator.PDFGenerator, senderInfo FullPersonInfo) {
+
+}
+
+func din5008aReceiverAdresse(gen *generator.PDFGenerator) {
+
+}
+
+func din5008atMetaInfo(gen *generator.PDFGenerator) {
+
+}
