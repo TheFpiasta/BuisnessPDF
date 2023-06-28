@@ -1,6 +1,6 @@
 package DIN_5008_a
 
-import "SimpleInvoice/norms/sizes/DIN-A4"
+import "SimpleInvoice/norms/paperSize/DIN-A4"
 
 // in mm
 // for DIN A4 paper
