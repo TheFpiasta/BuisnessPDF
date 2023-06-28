@@ -309,7 +309,8 @@ func (i *Invoice) printFooter() {
 
 	pdfGen.DrawLine(i.meta.Margin.Left, startPageNumberY, pageWidth-i.meta.Margin.Right, startPageNumberY, i.defaultLineColor, 0)
 	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
-	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
+	pageNumbering := fmt.Sprintf("Seite %d", pdfGen.GetPdf().PageNo())
+	pdfGen.PrintLnPdfText(pageNumbering, "", "C")
 	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 }
 

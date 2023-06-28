@@ -3,6 +3,7 @@ package pdfType
 import (
 	"SimpleInvoice/generator"
 	"encoding/json"
+	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -304,6 +305,7 @@ func (d *DeliveryNode) printFooter() {
 
 	d.pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY, d.defaultLineColor, 0)
 	d.pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
-	d.pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
+	pageNumbering := fmt.Sprintf("Seite %d", d.pdfGen.GetPdf().PageNo())
+	d.pdfGen.PrintLnPdfText(pageNumbering, "", "C")
 	d.pdfGen.SetFontSize(d.meta.Font.SizeDefault)
 }
