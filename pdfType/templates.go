@@ -15,7 +15,11 @@ func mimeImg(pdfGen *generator.PDFGenerator, strUrl string, posX float64, posY f
 	}
 
 	pdfGen.SetUnsafeCursor(posX, posY)
-	pdfGen.PlaceMimeImageFromUrl(urlStruct, scale, "R")
+
+	if !pdfGen.ImageIsRegistered(urlStruct.String()) {
+		pdfGen.RegisterMimeImageToPdf(urlStruct)
+	}
+	pdfGen.PlaceRegisteredImageOnPage(urlStruct.String(), "R", scale)
 }
 
 func letterAddressSenderSmall(pdfGen *generator.PDFGenerator, address string, posX float64, posY float64, size float64) {

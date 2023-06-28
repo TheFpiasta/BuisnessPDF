@@ -126,9 +126,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		false,
 		i.logger,
 		func() {
-			if i.data.SenderInfo.MimeLogoUrl != "" {
-				i.printMimeImg()
-			}
+			i.printHeader()
 		},
 		func(isLastPage bool) {
 			i.printFooter()
@@ -152,6 +150,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 func (i *Invoice) printMimeImg() {
 	pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
+	//TODO check scale
 	mimeImg(i.pdfGen, i.data.SenderInfo.MimeLogoUrl, pageWidth-i.meta.Margin.Right, 15, i.data.SenderInfo.MimeLogoScale)
 }
 
@@ -312,4 +311,10 @@ func (i *Invoice) printFooter() {
 	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
 	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
 	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
+}
+
+func (i *Invoice) printHeader() {
+	if i.data.SenderInfo.MimeLogoUrl != "" {
+		i.printMimeImg()
+	}
 }

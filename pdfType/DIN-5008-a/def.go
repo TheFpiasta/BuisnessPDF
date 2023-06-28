@@ -1,5 +1,6 @@
 package DIN_5008_a
 
+// in mm
 const (
 	FontSize10 = 10
 	FontSize11 = 11

@@ -9,12 +9,13 @@ import (
 // PDFGenerator is a light-way PDF document generator witch simplify and enhanced [github.com/jung-kurt/gofpdf].
 // The implemented methods focused primary on creating easy clean invoices or B2B letters.
 type PDFGenerator struct {
-	pdf                 *gofpdf.Fpdf
-	data                MetaData
-	maxSaveX            float64
-	maxSaveY            float64
-	strictErrorHandling bool
-	logger              *zerolog.Logger
+	pdf                  *gofpdf.Fpdf
+	data                 MetaData
+	maxSaveX             float64
+	maxSaveY             float64
+	strictErrorHandling  bool
+	logger               *zerolog.Logger
+	registeredImageTypes map[string]string
 }
 
 // MetaData sums all necessary inputs for NewPDFGenerator().
@@ -64,9 +65,13 @@ type Generator interface {
 	PrintPdfText(text string, styleStr string, alignStr string)
 	PrintLnPdfText(text string, styleStr string, alignStr string)
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
-	PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, alignStr string)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
 	NewLine(oldX float64)
+
+	RegisterMimeImageToPdf(cdnUrl *url.URL) (imageNameStr string)
+	PlaceRegisteredImageOnPage(imageNameStr string, alignStr string, scale float64)
+	GetRegisteredImageExtent(imageNameStr string) (w float64, h float64)
+	ImageIsRegistered(imageNameStr string) bool
 
 	PrintTableHeader(cells []string, columnWidth []float64, columnAlignStrings []string)
 	PrintTableBody(cells [][]string, columnWidths []float64, columnAlignStrings []string)

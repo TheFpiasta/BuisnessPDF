@@ -84,6 +84,7 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 	gen.strictErrorHandling = strictErrorHandling
 	gen.maxSaveX = pageWidth - data.MarginRight
 	gen.maxSaveY = pageHeight - data.MarginBottom
+	gen.registeredImageTypes = map[string]string{}
 
 	return gen, pdf.Error()
 }
@@ -353,10 +354,51 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 	core.pdf.Line(x1, y1, x2, y2)
 }
 
-// PlaceMimeImageFromUrl downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL and puts it in the current page.
-// The top side of the image will be snap to the current cursor position.
+// RegisterMimeImageToPdf downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL
+// and puts it in the current page.
+// The image will be registered in the PDF but not place on a page!
+// Use PlaceRegisteredImageOnPage to place the image on a page.
 //
 // cdnUrl specifies a parsed (CDN) URL.
+//
+// return imageNameStr, the image identifier for placing the image on a pdf page.
+func (core *PDFGenerator) RegisterMimeImageToPdf(cdnUrl *url.URL) (imageNameStr string) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	var rsp *http.Response
+
+	rsp, err := http.Get(cdnUrl.String())
+	if err != nil {
+		core.pdf.SetError(errorsWithStack.New(err))
+		return
+	}
+
+	imageNameStr = cdnUrl.String()
+
+	imageType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
+
+	switch imageType {
+	case "jpg":
+	case "png":
+	case "gif":
+		break
+	default:
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image type is not supported.")))
+		return ""
+	}
+
+	core.pdf.RegisterImageReader(cdnUrl.String(), imageType, rsp.Body)
+	core.registeredImageTypes[imageNameStr] = imageType
+
+	return imageNameStr
+}
+
+// PlaceRegisteredImageOnPage place a registered image (see RegisterMimeImageToPdf) on the current pdf page.
+// The top side of the image will be snap to the current cursor position.
+//
+// imageNameStr specifies the registered image identifier.
 //
 // scale specifies the scaling factor into which the image is drawn.
 // The value must be grater then 0. Use scaling of 1 for no scaling.
@@ -368,7 +410,7 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 //	"L" for align the left side of the image to the cursor,
 //	"R" for align the right side of the image to the cursor, and
 //	"C" for align the center of the image to the cursor.
-func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, alignStr string) {
+func (core *PDFGenerator) PlaceRegisteredImageOnPage(imageNameStr string, alignStr string, scale float64) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
@@ -378,22 +420,14 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image scale of 0 is not valide.")))
 		return
 	}
-	// <--
 
-	// ----- TODO registerMimeImageToPdf()
-	var rsp *http.Response
-
-	rsp, err := http.Get(cdnUrl.String())
-	if err != nil {
-		core.pdf.SetError(errorsWithStack.New(err))
+	if t := core.registeredImageTypes[imageNameStr]; t == "" {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image is not registerd.")))
 		return
 	}
+	// <--
 
-	imageMimeType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
-	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.String(), imageMimeType, rsp.Body)
-
-	// -----TODO addRegisteredMimeImageToPage()
-
+	imageInfoType := core.pdf.GetImageInfo(imageNameStr)
 	posX, posY := core.GetCursor()
 	imgWd, imgHt := imageInfoType.Extent()
 	imgWd, imgHt = imgWd*scale, imgHt*scale
@@ -411,7 +445,7 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	}
 
 	if core.pdf.Ok() {
-		core.pdf.Image(cdnUrl.String(), posX, posY, imgWd, imgHt, false, imageMimeType, 0, "")
+		core.pdf.Image(imageNameStr, posX, posY, imgWd, imgHt, false, core.registeredImageTypes[imageNameStr], 0, "")
 	}
 
 	return
