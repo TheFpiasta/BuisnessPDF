@@ -630,6 +630,6 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 	}
 }
 
-func (core *PDFGenerator) NextPage() {
+func (core *PDFGenerator) NewPage() {
 	core.pdf.AddPage()
 }

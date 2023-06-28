@@ -137,7 +137,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	}
 
 	i.pdfGen = pdfGen
-	i.pdfGen.NextPage()
+	i.pdfGen.NewPage()
 
 	i.printAddressee()
 	i.printMetaData(pdfGen)

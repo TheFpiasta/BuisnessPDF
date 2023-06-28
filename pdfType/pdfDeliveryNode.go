@@ -106,31 +106,35 @@ func (d *DeliveryNode) LogError(err error) {
 func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	d.logger.Debug().Msg("generate delivery node")
 
-	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
-		FontName:     "OpenSans",
-		FontGapY:     1.3,
-		FontSize:     d.meta.Font.SizeDefault,
-		MarginLeft:   d.meta.Margin.Left,
-		MarginTop:    d.meta.Margin.Top,
-		MarginRight:  d.meta.Margin.Right,
-		MarginBottom: d.meta.Margin.Bottom,
-		Unit:         "mm",
-	}, false, d.logger, func() {
-
-	}, func(isLastPage bool) {
-
-	})
+	pdfGen, err := generator.NewPDFGenerator(
+		generator.MetaData{
+			FontName:     "OpenSans",
+			FontGapY:     1.3,
+			FontSize:     d.meta.Font.SizeDefault,
+			MarginLeft:   d.meta.Margin.Left,
+			MarginTop:    d.meta.Margin.Top,
+			MarginRight:  d.meta.Margin.Right,
+			MarginBottom: d.meta.Margin.Bottom,
+			Unit:         "mm",
+		},
+		false,
+		d.logger,
+		func() {
+			if d.data.SenderInfo.MimeLogoUrl != "" {
+				d.printMimeImg()
+			}
+		},
+		func(isLastPage bool) {
+			d.printFooter()
+		},
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	d.pdfGen = pdfGen
-	d.pdfGen.NextPage()
-
-	if d.data.SenderInfo.MimeLogoUrl != "" {
-		d.printMimeImg()
-	}
+	d.pdfGen.NewPage()
 
 	d.printAddressee()
 	d.printMetaData(pdfGen)
@@ -138,7 +142,6 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	d.printDeliveryTable(pdfGen)
 	d.printClosingText(pdfGen)
 	d.printSignatureSection(pdfGen)
-	d.printFooter(pdfGen)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
@@ -277,30 +280,30 @@ func (d *DeliveryNode) printSignaturePart(pdfGen *generator.PDFGenerator, headTe
 	pdfGen.PrintPdfText("Unterschrift", "", "L")
 }
 
-func (d *DeliveryNode) printFooter(pdfGen *generator.PDFGenerator) {
+func (d *DeliveryNode) printFooter() {
 	const startAtY = 273
 	const startPageNumberY = 282
 	const gabY = 3
 
-	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	pageWidth, _ := d.pdfGen.GetPdf().GetPageSize()
 
-	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
-	pdfGen.DrawLine(d.meta.Margin.Left, startAtY, pageWidth-d.meta.Margin.Right, startAtY, d.defaultLineColor, 0)
+	d.pdfGen.SetFontSize(d.meta.Font.SizeSmall)
+	d.pdfGen.DrawLine(d.meta.Margin.Left, startAtY, pageWidth-d.meta.Margin.Right, startAtY, d.defaultLineColor, 0)
 
-	pdfGen.SetCursor(d.meta.Margin.Left, startAtY+gabY)
+	d.pdfGen.SetCursor(d.meta.Margin.Left, startAtY+gabY)
 	//pdfGen.PrintLnPdfText("Web", "", "L")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Web, "", "L")
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Web, "", "L")
 
-	pdfGen.SetCursor(pageWidth/2, startAtY+gabY)
+	d.pdfGen.SetCursor(pageWidth/2, startAtY+gabY)
 	//pdfGen.PrintLnPdfText("Tel", "", "C")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Phone, "", "C")
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Phone, "", "C")
 
-	pdfGen.SetCursor(pageWidth-d.meta.Margin.Right, startAtY+gabY)
+	d.pdfGen.SetCursor(pageWidth-d.meta.Margin.Right, startAtY+gabY)
 	//pdfGen.PrintLnPdfText("E-Mail", "", "R")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Email, "", "R")
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Email, "", "R")
 
-	pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY, d.defaultLineColor, 0)
-	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
-	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
+	d.pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY, d.defaultLineColor, 0)
+	d.pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
+	d.pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
+	d.pdfGen.SetFontSize(d.meta.Font.SizeDefault)
 }
