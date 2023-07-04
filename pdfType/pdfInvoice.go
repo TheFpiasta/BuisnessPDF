@@ -2,6 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
+	DIN_5008_a "SimpleInvoice/norms/letter/DIN-5008-a"
 	"encoding/json"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
@@ -55,7 +56,7 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 			Margin: pdfMargin{
 				Left:   25,
 				Right:  20,
-				Top:    45,
+				Top:    DIN_5008_a.AddressSenderTextStartY,
 				Bottom: 0,
 			},
 			Font: pdfFont{
@@ -162,14 +163,31 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 	pdfGen.DrawLine(i.meta.Margin.Left+98, 56, i.meta.Margin.Left+98, 80, i.defaultLineColor, 0)
 	pdfGen.SetCursor(i.meta.Margin.Left+100, 56)
-	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
-	pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
-	pdfGen.PrintLnPdfText("Datum:", "", "L")
 
-	pdfGen.SetCursor(i.meta.Margin.Left+140, 56)
-	pdfGen.PrintLnPdfText(i.data.InvoiceMeta.CustomerNumber, "", "L")
-	pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceNumber, "", "L")
-	pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceDate, "", "L")
+	type Metadata struct {
+		name  string
+		value string
+	}
+
+	var data []struct {
+		name  string
+		value string
+	}
+
+	data = append(data, Metadata{name: "Kundennummer:", value: i.data.InvoiceMeta.CustomerNumber})
+	data = append(data, Metadata{name: "Rechnungsnummer:", value: i.data.InvoiceMeta.InvoiceNumber})
+	data = append(data, Metadata{name: "Datum:", value: i.data.InvoiceMeta.InvoiceDate})
+
+	din5008atMetaInfo(pdfGen, data)
+
+	//pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
+	//pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
+	//pdfGen.PrintLnPdfText("Datum:", "", "L")
+	//
+	//pdfGen.SetCursor(i.meta.Margin.Left+140, 56)
+	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.CustomerNumber, "", "L")
+	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceNumber, "", "L")
+	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceDate, "", "L")
 }
 
 func (i *Invoice) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {

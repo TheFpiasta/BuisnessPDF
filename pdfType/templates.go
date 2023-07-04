@@ -80,14 +80,45 @@ func din5008aMimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
 	pdfGen.PlaceRegisteredImageOnPage(urlStruct.String(), "R", scale)
 }
 
-func din5008aSenderAdresse(gen *generator.PDFGenerator, senderInfo FullPersonInfo) {
+func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
+	name  string
+	value string
+}) {
+	var maxNameLength = 0.
+	var maxValueLength = 0.
+
+	for _, datum := range data {
+		nameLength := pdfGen.ComputeStringLength(datum.name)
+		if nameLength > maxNameLength {
+			maxNameLength = nameLength
+		}
+
+		valueLength := pdfGen.ComputeStringLength(datum.value)
+		if valueLength > maxValueLength {
+			maxValueLength = valueLength
+		}
+	}
+
+	//todo check max width
+	//todo check max length
+
+	pdfGen.SetCursor(DIN_5008_a.MetaInfoStartX, DIN_5008_a.MetaInfoStartY)
+	for _, datum := range data {
+		pdfGen.PrintLnPdfText(datum.name, "", "L")
+	}
+
+	const gapNameValue = 2
+	pdfGen.SetCursor(DIN_5008_a.MetaInfoStartX+maxNameLength+gapNameValue, DIN_5008_a.MetaInfoStartY)
+
+	for _, datum := range data {
+		pdfGen.PrintLnPdfText(datum.value, "", "L")
+	}
+}
+
+func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator) {
 
 }
 
-func din5008aReceiverAdresse(gen *generator.PDFGenerator) {
-
-}
-
-func din5008atMetaInfo(gen *generator.PDFGenerator) {
+func din5008aSenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullPersonInfo) {
 
 }

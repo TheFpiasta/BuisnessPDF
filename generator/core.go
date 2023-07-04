@@ -633,3 +633,7 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 func (core *PDFGenerator) NewPage() {
 	core.pdf.AddPage()
 }
+
+func (core *PDFGenerator) ComputeStringLength(str string) (length float64) {
+	return core.pdf.GetStringWidth(str)
+}

@@ -80,6 +80,7 @@ type Generator interface {
 	GetPdf() *gofpdf.Fpdf
 	GetError() error
 	SetError(err error)
+	ComputeStringLength(str string) (length float64)
 
 	GetFontName() string
 	GetMarginLeft() float64
