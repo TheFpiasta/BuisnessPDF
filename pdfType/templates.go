@@ -2,6 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
+	DIN_5008_a "SimpleInvoice/norms/letter/DIN-5008-a"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"net/url"
@@ -52,6 +53,31 @@ func getColumnWithFromPercentage(pdfGen *generator.PDFGenerator, columnPercent [
 		columnWidth = append(columnWidth, getCellWith(pdfGen, p))
 	}
 	return columnWidth
+}
+
+func din5008aMimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
+	urlStruct, err := url.Parse(strUrl)
+	if err != nil {
+		pdfGen.SetError(errorsWithStack.New(err.Error()))
+		return
+	}
+	const marginRight = DIN_5008_a.Width - DIN_5008_a.MetaInfoStopX
+	const marginTop = 5.
+
+	const startX = DIN_5008_a.HeaderStopX - marginRight
+	const startY = DIN_5008_a.HeaderStartY + marginTop
+	const maxImageHeight = DIN_5008_a.HeaderStopY - marginTop
+
+	pdfGen.SetUnsafeCursor(startX, startY)
+
+	if !pdfGen.ImageIsRegistered(urlStruct.String()) {
+		pdfGen.RegisterMimeImageToPdf(urlStruct)
+	}
+
+	_, imgHeight := pdfGen.GetRegisteredImageExtent(urlStruct.String())
+
+	scale := maxImageHeight / imgHeight
+	pdfGen.PlaceRegisteredImageOnPage(urlStruct.String(), "R", scale)
 }
 
 func din5008aSenderAdresse(gen *generator.PDFGenerator, senderInfo FullPersonInfo) {

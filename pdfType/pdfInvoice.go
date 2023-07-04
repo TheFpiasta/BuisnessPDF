@@ -148,12 +148,6 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (i *Invoice) printMimeImg() {
-	pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
-	//TODO check scale
-	mimeImg(i.pdfGen, i.data.SenderInfo.MimeLogoUrl, pageWidth-i.meta.Margin.Right, 15, i.data.SenderInfo.MimeLogoScale)
-}
-
 func (i *Invoice) printAddressee() {
 	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
 	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
@@ -316,6 +310,6 @@ func (i *Invoice) printFooter() {
 
 func (i *Invoice) printHeader() {
 	if i.data.SenderInfo.MimeLogoUrl != "" {
-		i.printMimeImg()
+		din5008aMimeImage(i.pdfGen, i.data.SenderInfo.MimeLogoUrl)
 	}
 }
