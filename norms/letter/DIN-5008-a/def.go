@@ -8,6 +8,9 @@ const (
 	Width  = DIN_A4.Width
 	Height = DIN_A4.Height
 
+	FontSizeSender8 = 8
+	FontGabSender8  = 2
+
 	FontSize10 = 10.
 	FontSize11 = 11.
 	FontSize12 = 12.

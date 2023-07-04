@@ -2,7 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
-	DIN_5008_a "SimpleInvoice/norms/letter/DIN-5008-a"
+	din5008A "SimpleInvoice/norms/letter/DIN-5008-a"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"net/url"
@@ -61,12 +61,12 @@ func din5008aMimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
 		pdfGen.SetError(errorsWithStack.New(err.Error()))
 		return
 	}
-	const marginRight = DIN_5008_a.Width - DIN_5008_a.MetaInfoStopX
+	const marginRight = din5008A.Width - din5008A.MetaInfoStopX
 	const marginTop = 5.
 
-	const startX = DIN_5008_a.HeaderStopX - marginRight
-	const startY = DIN_5008_a.HeaderStartY + marginTop
-	const maxImageHeight = DIN_5008_a.HeaderStopY - marginTop
+	const startX = din5008A.HeaderStopX - marginRight
+	const startY = din5008A.HeaderStartY + marginTop
+	const maxImageHeight = din5008A.HeaderStopY - marginTop
 
 	pdfGen.SetUnsafeCursor(startX, startY)
 
@@ -102,13 +102,13 @@ func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
 	//todo check max width
 	//todo check max length
 
-	pdfGen.SetCursor(DIN_5008_a.MetaInfoStartX, DIN_5008_a.MetaInfoStartY)
+	pdfGen.SetCursor(din5008A.MetaInfoStartX, din5008A.MetaInfoStartY)
 	for _, datum := range data {
 		pdfGen.PrintLnPdfText(datum.name, "", "L")
 	}
 
 	const gapNameValue = 2
-	pdfGen.SetCursor(DIN_5008_a.MetaInfoStartX+maxNameLength+gapNameValue, DIN_5008_a.MetaInfoStartY)
+	pdfGen.SetCursor(din5008A.MetaInfoStartX+maxNameLength+gapNameValue, din5008A.MetaInfoStartY)
 
 	for _, datum := range data {
 		pdfGen.PrintLnPdfText(datum.value, "", "L")
@@ -116,8 +116,7 @@ func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
 }
 
 func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress FullPersonInfo) {
-
-	pdfGen.SetCursor(DIN_5008_a.AddressReceiverTextStartX, DIN_5008_a.AddressReceiverTextStartY)
+	pdfGen.SetCursor(din5008A.AddressReceiverTextStartX, din5008A.AddressReceiverTextStartY)
 
 	if receiverAddress.CompanyName != "" {
 		pdfGen.PrintLnPdfText(receiverAddress.CompanyName, "", "L")
@@ -141,5 +140,43 @@ func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress Ful
 }
 
 func din5008aSenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullPersonInfo) {
+
+	var addressSenderCompanySmall = ""
+	var addressSenderRoadSmall = ""
+
+	addressSenderCompanySmall += senderInfo.CompanyName
+	if senderInfo.CompanyName != "" && (senderInfo.FullForename != "" || senderInfo.FullSurname != "") {
+		addressSenderCompanySmall += ", "
+	}
+
+	addressSenderCompanySmall += senderInfo.FullForename
+	if senderInfo.FullSurname != "" {
+		addressSenderCompanySmall += " "
+	}
+	addressSenderCompanySmall += senderInfo.FullSurname
+
+	addressSenderRoadSmall += fmt.Sprintf(" - %s %s",
+		senderInfo.Address.Road,
+		senderInfo.Address.HouseNumber,
+	)
+
+	if senderInfo.Address.StreetSupplement != "" {
+		addressSenderRoadSmall += ", "
+		addressSenderRoadSmall += senderInfo.Address.StreetSupplement
+	}
+
+	addressSenderRoadSmall += fmt.Sprintf(", %s %s %s",
+		senderInfo.Address.CountryCode,
+		senderInfo.Address.ZipCode,
+		senderInfo.Address.CityName,
+	)
+
+	// not really din conform now -> implement pdfGen new line to top
+	pdfGen.SetCursor(din5008A.AddressSenderTextStartX, din5008A.AddressSenderTextStopY-4)
+	pdfGen.SetFontSize(din5008A.FontSizeSender8)
+	pdfGen.SetFontGapY(din5008A.FontGabSender8)
+	pdfGen.PrintLnPdfText(addressSenderRoadSmall, "", "L")
+	pdfGen.SetCursor(din5008A.AddressSenderTextStartX, din5008A.AddressSenderTextStopY-7)
+	pdfGen.PrintLnPdfText(addressSenderCompanySmall, "", "L")
 
 }

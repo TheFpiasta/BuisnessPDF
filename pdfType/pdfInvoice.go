@@ -2,7 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
-	DIN_5008_a "SimpleInvoice/norms/letter/DIN-5008-a"
+	din5008A "SimpleInvoice/norms/letter/DIN-5008-a"
 	"encoding/json"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
@@ -56,14 +56,14 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 			Margin: pdfMargin{
 				Left:   25,
 				Right:  20,
-				Top:    DIN_5008_a.AddressSenderTextStartY,
+				Top:    din5008A.AddressSenderTextStartY,
 				Bottom: 0,
 			},
 			Font: pdfFont{
 				FontName:    "openSans",
-				SizeDefault: 10,
-				SizeSmall:   8,
-				SizeLarge:   15,
+				SizeDefault: din5008A.FontSize10,
+				SizeSmall:   din5008A.FontSizeSender8,
+				SizeLarge:   din5008A.FontSize10 + 5,
 			},
 		},
 		logger:           logger,
@@ -153,7 +153,9 @@ func (i *Invoice) printAddressee() {
 	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
 	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
 
-	letterAddressSenderSmall(i.pdfGen, getAddressLine(i.data.SenderAddress), i.meta.Margin.Left, 49, i.meta.Font.SizeSmall)
+	//letterAddressSenderSmall(i.pdfGen, getAddressLine(i.data.SenderAddress), i.meta.Margin.Left, 49, i.meta.Font.SizeSmall)
+	din5008aSenderAdresse(i.pdfGen, i.data.SenderAddress)
+	i.pdfGen.SetFontGapY(din5008A.FontGab10)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 
 	//letterReceiverAddress(i.pdfGen, i.data.ReceiverAddress, i.meta.Margin.Left, 56)
