@@ -156,7 +156,8 @@ func (i *Invoice) printAddressee() {
 	letterAddressSenderSmall(i.pdfGen, getAddressLine(i.data.SenderAddress), i.meta.Margin.Left, 49, i.meta.Font.SizeSmall)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 
-	letterReceiverAddress(i.pdfGen, i.data.ReceiverAddress, i.meta.Margin.Left, 56)
+	//letterReceiverAddress(i.pdfGen, i.data.ReceiverAddress, i.meta.Margin.Left, 56)
+	din5008aReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
 }
 
 func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
@@ -179,15 +180,6 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	data = append(data, Metadata{name: "Datum:", value: i.data.InvoiceMeta.InvoiceDate})
 
 	din5008atMetaInfo(pdfGen, data)
-
-	//pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
-	//pdfGen.PrintLnPdfText("Rechnungsnummer:", "", "L")
-	//pdfGen.PrintLnPdfText("Datum:", "", "L")
-	//
-	//pdfGen.SetCursor(i.meta.Margin.Left+140, 56)
-	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.CustomerNumber, "", "L")
-	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceNumber, "", "L")
-	//pdfGen.PrintLnPdfText(i.data.InvoiceMeta.InvoiceDate, "", "L")
 }
 
 func (i *Invoice) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {
