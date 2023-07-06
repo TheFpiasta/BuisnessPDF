@@ -4,7 +4,6 @@ import (
 	"SimpleInvoice/generator"
 	din5008A "SimpleInvoice/norms/letter/DIN-5008-a"
 	"encoding/json"
-	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -20,6 +19,7 @@ type Invoice struct {
 	printErrStack    bool
 	pdfGen           *generator.PDFGenerator
 	defaultLineColor generator.Color
+	footerStartY     float64
 }
 
 type invoiceRequestData struct {
@@ -147,6 +147,15 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
 
+	showDebugFramesDin5008A(i.pdfGen, i.logger)
+	i.pdfGen.NewPage()
+	showDebugFramesDin5008A(i.pdfGen, i.logger)
+	i.pdfGen.NewPage()
+	showDebugFramesDin5008A(i.pdfGen, i.logger)
+	i.pdfGen.NewPage()
+	showDebugFramesDin5008A(i.pdfGen, i.logger)
+
+	din5008aPageNumbering(pdfGen, i.footerStartY)
 	showDebugFramesDin5008A(i.pdfGen, i.logger)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
@@ -284,38 +293,10 @@ func (i *Invoice) printClosingText(pdfGen *generator.PDFGenerator) {
 }
 
 func (i *Invoice) printFooter() {
-	pdfGen := i.pdfGen
-
-	const startAtY = 261
-	const startPageNumberY = 282
-	const gabY = 3
-
-	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
-
-	pdfGen.SetFontSize(i.meta.Font.SizeSmall)
-	pdfGen.DrawLine(i.meta.Margin.Left, startAtY, pageWidth-i.meta.Margin.Right, startAtY, i.defaultLineColor, 0)
-
-	pdfGen.SetCursor(i.meta.Margin.Left, startAtY+gabY)
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.Web, "", "L")
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.Phone, "", "L")
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.Email, "", "L")
-
-	pdfGen.SetCursor(pageWidth/2, startAtY+gabY)
-	pdfGen.PrintLnPdfText(i.data.SenderAddress.CompanyName, "", "C")
-	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", i.data.SenderAddress.Address.Road, i.data.SenderAddress.Address.HouseNumber), "", "C")
-	pdfGen.PrintLnPdfText(i.data.SenderAddress.Address.ZipCode+" "+i.data.SenderAddress.Address.CityName, "", "C")
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.TaxNumber, "", "C")
-
-	pdfGen.SetCursor(pageWidth-i.meta.Margin.Right, startAtY+gabY)
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.BankName, "", "R")
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.Iban, "", "R")
-	pdfGen.PrintLnPdfText(i.data.SenderInfo.Bic, "", "R")
-
-	pdfGen.DrawLine(i.meta.Margin.Left, startPageNumberY, pageWidth-i.meta.Margin.Right, startPageNumberY, i.defaultLineColor, 0)
-	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
-	pageNumbering := fmt.Sprintf("Seite %d", pdfGen.GetPdf().PageNo())
-	pdfGen.PrintLnPdfText(pageNumbering, "", "C")
-	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
+	footerStartY := din5008aFooter(i.pdfGen, i.defaultLineColor, i.data.SenderInfo, i.data.SenderAddress)
+	if i.footerStartY == 0 {
+		i.footerStartY = footerStartY
+	}
 }
 
 func (i *Invoice) printHeader() {

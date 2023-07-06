@@ -197,3 +197,77 @@ func din5008aSenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullPerson
 	pdfGen.SetFontSize(din5008A.FontSize10)
 	pdfGen.SetFontGapY(din5008A.FontGab10)
 }
+
+func din5008aBody() {
+
+}
+
+func din5008aFooter(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, SenderInfo SenderInfo, SenderAddress FullPersonInfo) (footerStartY float64) {
+
+	const startAtY = din5008A.Height - din5008A.MarginPageNumberY
+	const startPageNumberY = 282
+	var currentStartX float64
+	var currentY float64
+
+	footerStartY = din5008A.Height
+
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGabReceiver8)
+
+	pdfGen.DrawLine(din5008A.BodyStartX, startAtY, din5008A.BodyStopX, startAtY, defaultLineColor, 0)
+
+	// calculate height
+	pdfGen.SetUnsafeCursor(0, startAtY)
+	pdfGen.PreviousLine(0)
+	pdfGen.PreviousLine(0)
+	pdfGen.PreviousLine(0)
+	pdfGen.PreviousLine(0)
+	_, currentY = pdfGen.GetCursor()
+	footerStartY = currentY
+
+	currentStartX = din5008A.BodyStartX
+	pdfGen.SetCursor(currentStartX, footerStartY)
+	pdfGen.PrintLnPdfText(SenderInfo.Web, "", "L")
+	pdfGen.PrintLnPdfText(SenderInfo.Phone, "", "L")
+	pdfGen.PrintLnPdfText(SenderInfo.Email, "", "L")
+
+	currentStartX = ((din5008A.BodyStopX - din5008A.BodyStartX) / 2) + din5008A.BodyStartX
+	pdfGen.SetCursor(currentStartX, footerStartY)
+	pdfGen.PrintLnPdfText(SenderAddress.CompanyName, "", "C")
+	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", SenderAddress.Address.Road, SenderAddress.Address.HouseNumber), "", "C")
+	pdfGen.PrintLnPdfText(SenderAddress.Address.ZipCode+" "+SenderAddress.Address.CityName, "", "C")
+	pdfGen.PrintLnPdfText(SenderInfo.TaxNumber, "", "C")
+
+	currentStartX = din5008A.BodyStopX
+	pdfGen.SetCursor(currentStartX, footerStartY)
+	pdfGen.PrintLnPdfText(SenderInfo.BankName, "", "R")
+	pdfGen.PrintLnPdfText(SenderInfo.Iban, "", "R")
+	pdfGen.PrintLnPdfText(SenderInfo.Bic, "", "R")
+
+	pdfGen.DrawLine(din5008A.BodyStartX, footerStartY-1, din5008A.BodyStopX, footerStartY-1, defaultLineColor, 0)
+
+	return footerStartY
+}
+
+func din5008aPageNumbering(pdfGen *generator.PDFGenerator, footerStartY float64) {
+	if pdfGen.GetTotalNumber() == 1 {
+		// if pdf has only one page, no page number is required by DIN 5008 A
+		return
+	}
+
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(0)
+
+	pages := pdfGen.GetTotalNumber()
+
+	for i := 1; i <= pages; i++ {
+		pdfGen.GoToPage(i)
+		pdfGen.SetUnsafeCursor(din5008A.BodyStopX, footerStartY-din5008A.MarginPageNumberY)
+		pdfGen.PreviousLine(din5008A.BodyStopX)
+		text := fmt.Sprintf("Seite %d von %d", i, pages)
+		pdfGen.PrintPdfText(text, "", "R")
+	}
+
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGab10)
+}

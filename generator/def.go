@@ -98,6 +98,9 @@ type Generator interface {
 	SetUnsafeCursor(x float64, y float64)
 
 	NewPage()
+	GetCurrentPageNumber() int
+	GetTotalNumber() int
+	GoToPage(pageNumber int)
 }
 
 // Color represents a specific color in red, green and blue values, each from 0 to 255

@@ -153,3 +153,15 @@ func (core *PDFGenerator) GetRegisteredImageExtent(imageNameStr string) (w float
 func (core *PDFGenerator) ImageIsRegistered(imageNameStr string) bool {
 	return core.registeredImageTypes[imageNameStr] != ""
 }
+
+func (core *PDFGenerator) GetCurrentPageNumber() int {
+	return core.pdf.PageNo()
+}
+
+func (core *PDFGenerator) GetTotalNumber() int {
+	return core.pdf.PageNo()
+}
+
+func (core *PDFGenerator) GoToPage(pageNumber int) {
+	core.pdf.SetPage(pageNumber)
+}
