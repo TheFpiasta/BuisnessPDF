@@ -147,20 +147,16 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.printInvoiceTable(pdfGen)
 	i.printClosingText(pdfGen)
 
+	showDebugFramesDin5008A(i.pdfGen, i.logger)
+
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (i *Invoice) printAddressee() {
-	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
-	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
-
-	//letterAddressSenderSmall(i.pdfGen, getAddressLine(i.data.SenderAddress), i.meta.Margin.Left, 49, i.meta.Font.SizeSmall)
 	din5008aSenderAdresse(i.pdfGen, i.data.SenderAddress)
+	din5008aReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
 	i.pdfGen.SetFontGapY(din5008A.FontGab10)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-
-	//letterReceiverAddress(i.pdfGen, i.data.ReceiverAddress, i.meta.Margin.Left, 56)
-	din5008aReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
 }
 
 func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {

@@ -118,6 +118,9 @@ func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
 func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress FullPersonInfo) {
 	pdfGen.SetCursor(din5008A.AddressReceiverTextStartX, din5008A.AddressReceiverTextStartY)
 
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGabSender8)
+
 	if receiverAddress.CompanyName != "" {
 		pdfGen.PrintLnPdfText(receiverAddress.CompanyName, "", "L")
 	}
@@ -142,41 +145,55 @@ func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress Ful
 func din5008aSenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullPersonInfo) {
 
 	var addressSenderCompanySmall = ""
+
+	if senderInfo.CompanyName != "" {
+		addressSenderCompanySmall += fmt.Sprintf("%s", senderInfo.CompanyName)
+
+		if senderInfo.FullForename != "" || senderInfo.FullSurname != "" {
+			addressSenderCompanySmall += ", "
+		}
+	}
+
+	if senderInfo.Supplement != "" && (senderInfo.FullForename != "" || senderInfo.FullSurname != "") {
+		addressSenderCompanySmall += fmt.Sprintf("%s ", senderInfo.Supplement)
+	}
+
+	if senderInfo.FullForename != "" {
+		addressSenderCompanySmall += fmt.Sprintf("%s ", senderInfo.FullForename)
+	}
+	if senderInfo.FullSurname != "" {
+		addressSenderCompanySmall += fmt.Sprintf("%s ", senderInfo.FullSurname)
+	}
+
 	var addressSenderRoadSmall = ""
 
-	addressSenderCompanySmall += senderInfo.CompanyName
-	if senderInfo.CompanyName != "" && (senderInfo.FullForename != "" || senderInfo.FullSurname != "") {
-		addressSenderCompanySmall += ", "
-	}
-
-	addressSenderCompanySmall += senderInfo.FullForename
-	if senderInfo.FullSurname != "" {
-		addressSenderCompanySmall += " "
-	}
-	addressSenderCompanySmall += senderInfo.FullSurname
-
-	addressSenderRoadSmall += fmt.Sprintf(" - %s %s",
+	addressSenderRoadSmall += fmt.Sprintf("%s %s",
 		senderInfo.Address.Road,
 		senderInfo.Address.HouseNumber,
 	)
 
 	if senderInfo.Address.StreetSupplement != "" {
-		addressSenderRoadSmall += ", "
-		addressSenderRoadSmall += senderInfo.Address.StreetSupplement
+		addressSenderRoadSmall += fmt.Sprintf(", %s", senderInfo.Address.StreetSupplement)
 	}
 
-	addressSenderRoadSmall += fmt.Sprintf(", %s %s %s",
-		senderInfo.Address.CountryCode,
+	addressSenderRoadSmall += fmt.Sprintf(", %s %s",
 		senderInfo.Address.ZipCode,
 		senderInfo.Address.CityName,
 	)
 
-	// not really din conform now -> implement pdfGen new line to top
-	pdfGen.SetCursor(din5008A.AddressSenderTextStartX, din5008A.AddressSenderTextStopY-4)
+	if senderInfo.Address.CountryCode != "" {
+		addressSenderRoadSmall += fmt.Sprintf(", %s", senderInfo.Address.CountryCode)
+	}
+
+	pdfGen.SetCursor(din5008A.AddressSenderTextStartX, din5008A.AddressSenderTextStopY)
+	pdfGen.PreviousLine(din5008A.AddressSenderTextStartX)
+
 	pdfGen.SetFontSize(din5008A.FontSizeSender8)
 	pdfGen.SetFontGapY(din5008A.FontGabSender8)
-	pdfGen.PrintLnPdfText(addressSenderRoadSmall, "", "L")
-	pdfGen.SetCursor(din5008A.AddressSenderTextStartX, din5008A.AddressSenderTextStopY-7)
-	pdfGen.PrintLnPdfText(addressSenderCompanySmall, "", "L")
+	pdfGen.PrintPdfText(addressSenderCompanySmall, "", "L")
+	pdfGen.PreviousLine(din5008A.AddressSenderTextStartX)
+	pdfGen.PrintPdfText(addressSenderRoadSmall, "", "L")
 
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGab10)
 }

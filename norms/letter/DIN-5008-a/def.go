@@ -8,8 +8,10 @@ const (
 	Width  = DIN_A4.Width
 	Height = DIN_A4.Height
 
-	FontSizeSender8 = 8
-	FontGabSender8  = 2
+	FontSizeSender8   = 8
+	FontGabSender8    = 0.5
+	FontSizeReceiver8 = 8
+	FontGabReceiver8  = 1
 
 	FontSize10 = 10.
 	FontSize11 = 11.
@@ -38,11 +40,11 @@ const (
 	MetaInfoStartX = 125.
 	MetaInfoStartY = 32.
 	MetaInfoStopX  = 200.
-	MetaInfoStopY  = 107.
+	MetaInfoStopY  = 95
 
 	BodyStartX = 25.
 	BodyStartY = 103.46
-	BodyStopX  = 90.
+	BodyStopX  = 190
 
 	MarginPageNumberY = 4.23
 )

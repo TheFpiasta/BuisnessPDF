@@ -217,6 +217,25 @@ func (core *PDFGenerator) NewLine(oldX float64) {
 	core.pdf.SetXY(oldX, newY)
 }
 
+// PreviousLine sets the cursor on the previous line dependent on the given X-position.
+// (mostly use the start X-point of the current line.)
+func (core *PDFGenerator) PreviousLine(oldX float64) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	// --> validate inputs
+	if oldX < 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative oldX is not allowed.")))
+		return
+	}
+	// <--
+
+	_, lineHeight := core.pdf.GetFontSize()
+	newY := core.pdf.GetY() - lineHeight - core.data.FontGapY
+	core.pdf.SetXY(oldX, newY)
+}
+
 // extractLinesFromText split a string on newline character (\n) and return the parts as an array.
 // Prefixing whitespaces (ONLY " ")! will be automatically removed on each part.
 func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string) {

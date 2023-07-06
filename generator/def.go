@@ -67,6 +67,7 @@ type Generator interface {
 	DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64)
 	PrintPdfTextFormatted(text string, styleStr string, alignStr string, borderStr string, fill bool, backgroundColor Color, cellHeight float64, cellWidth float64)
 	NewLine(oldX float64)
+	PreviousLine(oldX float64)
 
 	RegisterMimeImageToPdf(cdnUrl *url.URL) (imageNameStr string)
 	PlaceRegisteredImageOnPage(imageNameStr string, alignStr string, scale float64)
