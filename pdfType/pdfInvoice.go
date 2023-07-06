@@ -143,22 +143,19 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	i.printAddressee()
 	i.printMetaData(pdfGen)
-	i.printHeadlineAndOpeningText(pdfGen)
-	i.printInvoiceTable(pdfGen)
-	i.printClosingText(pdfGen)
+	i.printBody()
 
-	showDebugFramesDin5008A(i.pdfGen, i.logger)
-	i.pdfGen.NewPage()
-	showDebugFramesDin5008A(i.pdfGen, i.logger)
-	i.pdfGen.NewPage()
-	showDebugFramesDin5008A(i.pdfGen, i.logger)
-	i.pdfGen.NewPage()
-	showDebugFramesDin5008A(i.pdfGen, i.logger)
-
-	din5008aPageNumbering(pdfGen, i.footerStartY)
-	showDebugFramesDin5008A(i.pdfGen, i.logger)
+	//din5008aPageNumbering(i.pdfGen, i.footerStartY)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
+}
+
+func (i *Invoice) printBody() {
+	din5008aBody(i.pdfGen, func() {
+		i.printHeadlineAndOpeningText()
+		i.printInvoiceTable()
+		i.printClosingText()
+	})
 }
 
 func (i *Invoice) printAddressee() {
@@ -169,10 +166,6 @@ func (i *Invoice) printAddressee() {
 }
 
 func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
-	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-	pdfGen.DrawLine(i.meta.Margin.Left+98, 56, i.meta.Margin.Left+98, 80, i.defaultLineColor, 0)
-	pdfGen.SetCursor(i.meta.Margin.Left+100, 56)
-
 	type Metadata struct {
 		name  string
 		value string
@@ -188,22 +181,22 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	data = append(data, Metadata{name: "Datum:", value: i.data.InvoiceMeta.InvoiceDate})
 	data = append(data, Metadata{name: "Projektnummer:", value: i.data.InvoiceMeta.ProjectNumber})
 
-	din5008atMetaInfo(pdfGen, data)
+	din5008atMetaInfo(pdfGen, i.defaultLineColor, data)
 }
 
-func (i *Invoice) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {
+func (i *Invoice) printHeadlineAndOpeningText() {
 	//Überschrift
-	pdfGen.SetCursor(i.meta.Margin.Left, 100)
-	pdfGen.SetFontSize(i.meta.Font.SizeLarge)
-	pdfGen.PrintLnPdfText(i.data.InvoiceBody.HeadlineText+" "+i.data.InvoiceMeta.InvoiceNumber, "b", "L")
+	i.pdfGen.SetFontSize(i.meta.Font.SizeLarge)
+	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.HeadlineText+" "+i.data.InvoiceMeta.InvoiceNumber, "b", "L")
 
 	//opening
-	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-	pdfGen.NewLine(pdfGen.GetMarginLeft())
-	pdfGen.PrintLnPdfText(i.data.InvoiceBody.OpeningText, "", "L")
+	i.pdfGen.SetFontSize(din5008A.FontSize10)
+	i.pdfGen.SetFontGapY(din5008A.FontGab10)
+	i.pdfGen.NewLine(i.pdfGen.GetMarginLeft())
+	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.OpeningText, "", "L")
 }
 
-func (i *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
+func (i *Invoice) printInvoiceTable() {
 	var invoicedItems = [][]string{{}}
 
 	type taxSumType struct {
@@ -244,7 +237,7 @@ func (i *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 
 	var headerCells = []string{"Pos", "Anzahl", "Preis", "Beschreibung", "USt", "Netto"}
 	var columnPercent = []float64{6, 10, 10, 54, 8, 12}
-	var columnWidth = getColumnWithFromPercentage(pdfGen, columnPercent)
+	var columnWidth = getColumnWithFromPercentage(i.pdfGen, columnPercent)
 
 	var headerCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
 	var bodyCellAlign = []string{"LM", "LM", "LM", "LM", "RM", "RM"}
@@ -268,28 +261,28 @@ func (i *Invoice) printInvoiceTable(pdfGen *generator.PDFGenerator) {
 	summaryCells = append(summaryCells, []string{"", "Gesamtbetrag", germanNumber(totalTax+netSum) + "€"})
 
 	var summaryColumnPercent = []float64{60, 25, 15}
-	var summaryColumnWidths = getColumnWithFromPercentage(pdfGen, summaryColumnPercent)
+	var summaryColumnWidths = getColumnWithFromPercentage(i.pdfGen, summaryColumnPercent)
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.SetFontSize(i.meta.Font.SizeSmall)
-	pdfGen.PrintLnPdfText(i.data.InvoiceBody.ServiceTimeText, "i", "L")
-	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.SetFontSize(i.meta.Font.SizeSmall)
+	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.ServiceTimeText, "i", "L")
+	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 
-	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
-	pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
-	pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
+	i.pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
+	i.pdfGen.PrintTableBody(invoicedItems, columnWidth, bodyCellAlign)
+	i.pdfGen.PrintTableFooter(summaryCells, summaryColumnWidths, summaryCellAlign)
 }
 
-func (i *Invoice) printClosingText(pdfGen *generator.PDFGenerator) {
-	pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.PrintLnPdfText(i.data.InvoiceBody.ClosingText, "", "L")
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.NewLine(i.meta.Margin.Left)
-	pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
+func (i *Invoice) printClosingText() {
+	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.ClosingText, "", "L")
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
 }
 
 func (i *Invoice) printFooter() {

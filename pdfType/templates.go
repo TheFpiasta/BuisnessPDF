@@ -80,12 +80,15 @@ func din5008aMimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
 	pdfGen.PlaceRegisteredImageOnPage(urlStruct.String(), "R", scale)
 }
 
-func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
+func din5008atMetaInfo(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, data []struct {
 	name  string
 	value string
 }) {
 	var maxNameLength = 0.
 	var maxValueLength = 0.
+
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGab10)
 
 	for _, datum := range data {
 		nameLength := pdfGen.ComputeStringLength(datum.name)
@@ -113,6 +116,10 @@ func din5008atMetaInfo(pdfGen *generator.PDFGenerator, data []struct {
 	for _, datum := range data {
 		pdfGen.PrintLnPdfText(datum.value, "", "L")
 	}
+
+	_, y := pdfGen.GetCursor()
+
+	pdfGen.DrawLine(din5008A.MetaInfoStartX, din5008A.MetaInfoStartY, din5008A.MetaInfoStartX, y-din5008A.FontGab10, defaultLineColor, 1)
 }
 
 func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress FullPersonInfo) {
@@ -198,10 +205,6 @@ func din5008aSenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullPerson
 	pdfGen.SetFontGapY(din5008A.FontGab10)
 }
 
-func din5008aBody() {
-
-}
-
 func din5008aFooter(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, SenderInfo SenderInfo, SenderAddress FullPersonInfo) (footerStartY float64) {
 
 	const startAtY = din5008A.Height - din5008A.MarginPageNumberY
@@ -270,4 +273,12 @@ func din5008aPageNumbering(pdfGen *generator.PDFGenerator, footerStartY float64)
 
 	pdfGen.SetFontSize(din5008A.FontSize10)
 	pdfGen.SetFontGapY(din5008A.FontGab10)
+}
+
+func din5008aBody(pdfGen *generator.PDFGenerator, bodyGenerationFunc func()) {
+	pdfGen.SetCursor(din5008A.BodyStartX, din5008A.BodyStartY)
+	pdfGen.SetFontSize(din5008A.FontSize10)
+	pdfGen.SetFontGapY(din5008A.FontGab10)
+
+	bodyGenerationFunc()
 }
