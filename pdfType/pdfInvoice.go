@@ -30,6 +30,7 @@ type invoiceRequestData struct {
 		InvoiceNumber  string `json:"invoiceNumber"`
 		InvoiceDate    string `json:"invoiceDate"`
 		CustomerNumber string `json:"customerNumber"`
+		ProjectNumber  string `json:"projectNumber"`
 	} `json:"invoiceMeta"`
 	InvoiceBody struct {
 		OpeningText     string `json:"openingText"`
@@ -180,6 +181,7 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	data = append(data, Metadata{name: "Kundennummer:", value: i.data.InvoiceMeta.CustomerNumber})
 	data = append(data, Metadata{name: "Rechnungsnummer:", value: i.data.InvoiceMeta.InvoiceNumber})
 	data = append(data, Metadata{name: "Datum:", value: i.data.InvoiceMeta.InvoiceDate})
+	data = append(data, Metadata{name: "Projektnummer:", value: i.data.InvoiceMeta.ProjectNumber})
 
 	din5008atMetaInfo(pdfGen, data)
 }

@@ -42,7 +42,8 @@
     "invoiceMeta": {
         "invoiceNumber": "",
         "invoiceDate": "",
-        "customerNumber": ""
+        "customerNumber": "",
+        "projectNumber": ""
     },
     "InvoiceBody": {
         "openingText": "",

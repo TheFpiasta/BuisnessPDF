@@ -42,7 +42,8 @@
   "invoiceMeta": {
     "invoiceNumber": "XI-23045",
     "invoiceDate": "11.0.2023",
-    "customerNumber": "K-321"
+    "customerNumber": "K-321",
+    "projectNumber": "21-003"
   },
   "InvoiceBody": {
     "openingText": "Hello, /n this is the opening line.",
