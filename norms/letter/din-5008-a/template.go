@@ -13,7 +13,13 @@ type InfoData struct {
 	Value string
 }
 
-func MimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
+func FullAddressesAndInfoPart(pdfGen *generator.PDFGenerator, senderInfo FullAdresse, receiverAddress FullAdresse, data []InfoData) {
+	SenderAdresse(pdfGen, senderInfo)
+	ReceiverAdresse(pdfGen, receiverAddress)
+	MetaInfo(pdfGen, data)
+}
+
+func MimeImageHeader(pdfGen *generator.PDFGenerator, strUrl string) {
 	urlStruct, err := url.Parse(strUrl)
 	if err != nil {
 		pdfGen.SetError(errorsWithStack.New(err.Error()))

@@ -114,11 +114,6 @@ func (i *Invoice) LogError(err error) {
 func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.logger.Debug().Msg("generate invoice")
 
-	//if lineWith < 0 {
-	//	core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed.")))
-	//	return
-	//}
-
 	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
 		FontName:         "OpenSans",
 		FontGapY:         1.3,
@@ -147,44 +142,27 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.pdfGen = pdfGen
 	i.pdfGen.NewPage()
 
-	i.printAddressee()
-	i.printMetaData(pdfGen)
-	i.printBody()
-
-	din5008a.PageNumbering(i.pdfGen, i.footerStartY)
+	i.doGeneratePdf()
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
-func (i *Invoice) printBody() {
+func (i *Invoice) doGeneratePdf() {
+	var infoData []din5008a.InfoData
+	infoData = append(infoData, din5008a.InfoData{Name: "Kundennummer:", Value: i.data.InvoiceMeta.CustomerNumber})
+	infoData = append(infoData, din5008a.InfoData{Name: "Rechnungsnummer:", Value: i.data.InvoiceMeta.InvoiceNumber})
+	infoData = append(infoData, din5008a.InfoData{Name: "Datum:", Value: i.data.InvoiceMeta.InvoiceDate})
+	infoData = append(infoData, din5008a.InfoData{Name: "Projektnummer:", Value: i.data.InvoiceMeta.ProjectNumber})
+
+	din5008a.FullAddressesAndInfoPart(i.pdfGen, i.data.SenderAddress, i.data.ReceiverAddress, infoData)
+
 	din5008a.Body(i.pdfGen, func() {
 		i.printHeadlineAndOpeningText()
 		i.printInvoiceTable()
 		i.printClosingText()
 	})
-}
 
-func (i *Invoice) printAddressee() {
-	din5008a.SenderAdresse(i.pdfGen, i.data.SenderAddress)
-	din5008a.ReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
-	i.pdfGen.SetFontGapY(din5008a.FontGab10)
-	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-}
-
-func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
-	type Metadata struct {
-		name  string
-		value string
-	}
-
-	var data []din5008a.InfoData
-
-	data = append(data, din5008a.InfoData{Name: "Kundennummer:", Value: i.data.InvoiceMeta.CustomerNumber})
-	data = append(data, din5008a.InfoData{Name: "Rechnungsnummer:", Value: i.data.InvoiceMeta.InvoiceNumber})
-	data = append(data, din5008a.InfoData{Name: "Datum:", Value: i.data.InvoiceMeta.InvoiceDate})
-	data = append(data, din5008a.InfoData{Name: "Projektnummer:", Value: i.data.InvoiceMeta.ProjectNumber})
-
-	din5008a.MetaInfo(pdfGen, data)
+	din5008a.PageNumbering(i.pdfGen, i.footerStartY)
 }
 
 func (i *Invoice) printHeadlineAndOpeningText() {
@@ -336,6 +314,6 @@ func (i *Invoice) printFooterContent(maxFooterHeight float64) (footerStartY floa
 
 func (i *Invoice) printHeader() {
 	if i.data.SenderInfo.MimeLogoUrl != "" {
-		din5008a.MimeImage(i.pdfGen, i.data.SenderInfo.MimeLogoUrl)
+		din5008a.MimeImageHeader(i.pdfGen, i.data.SenderInfo.MimeLogoUrl)
 	}
 }

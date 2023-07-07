@@ -75,7 +75,7 @@ func TestPDFGenerator_DrawLine(t *testing.T) {
 				maxSaveY:            tt.fields.maxSaveY,
 				strictErrorHandling: tt.fields.strictErrorHandling,
 			}
-			core.DrawLine(tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2, tt.args.color, tt.args.lineWith)
+			core.DrawLine(tt.args.x1, tt.args.y1, tt.args.x2, tt.args.y2)
 		})
 	}
 }
