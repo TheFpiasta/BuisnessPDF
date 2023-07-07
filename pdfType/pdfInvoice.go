@@ -124,7 +124,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		MarginRight:      i.meta.Margin.Right,
 		MarginBottom:     i.meta.Margin.Bottom,
 		Unit:             "mm",
-		DefaultLineWidth: 0.2,
+		DefaultLineWidth: 0.4,
 		DefaultLineColor: i.defaultLineColor,
 	},
 		false,
