@@ -217,7 +217,7 @@ func Body(pdfGen *generator.PDFGenerator, bodyGenerationFunc func()) {
 	bodyGenerationFunc()
 }
 
-func ShowDebugFrames(pdfGen *generator.PDFGenerator, logger *zerolog.Logger) {
+func ShowDebugFrame(pdfGen *generator.PDFGenerator, logger *zerolog.Logger) {
 	logger.Warn().Msg("show debug frames")
 	pdfGen.DrawLine(HeaderStartX, HeaderStopY, HeaderStopX, HeaderStopY)
 
