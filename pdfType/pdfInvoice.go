@@ -114,18 +114,19 @@ func (i *Invoice) LogError(err error) {
 func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.logger.Debug().Msg("generate invoice")
 
-	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
-		FontName:         "OpenSans",
-		FontGapY:         1.3,
-		FontSize:         i.meta.Font.SizeDefault,
-		MarginLeft:       i.meta.Margin.Left,
-		MarginTop:        i.meta.Margin.Top,
-		MarginRight:      i.meta.Margin.Right,
-		MarginBottom:     i.meta.Margin.Bottom,
-		Unit:             "mm",
-		DefaultLineWidth: 0.4,
-		DefaultLineColor: generator.Color{R: 200, G: 200, B: 200},
-	},
+	pdfGen, err := generator.NewPDFGenerator(
+		generator.MetaData{
+			FontName:         "OpenSans",
+			FontGapY:         1.3,
+			FontSize:         i.meta.Font.SizeDefault,
+			MarginLeft:       i.meta.Margin.Left,
+			MarginTop:        i.meta.Margin.Top,
+			MarginRight:      i.meta.Margin.Right,
+			MarginBottom:     i.meta.Margin.Bottom,
+			Unit:             "mm",
+			DefaultLineWidth: 0.4,
+			DefaultLineColor: generator.Color{R: 162, G: 162, B: 162},
+		},
 		false,
 		i.logger,
 		func() {
@@ -133,7 +134,8 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		},
 		func(isLastPage bool) {
 			i.printFooter()
-		})
+		},
+	)
 
 	if err != nil {
 		return nil, err
@@ -173,7 +175,7 @@ func (i *Invoice) printHeadlineAndOpeningText() {
 	//opening
 	i.pdfGen.SetFontSize(din5008a.FontSize10)
 	i.pdfGen.SetFontGapY(din5008a.FontGab10)
-	i.pdfGen.NewLine(i.pdfGen.GetMarginLeft())
+	i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.OpeningText, "", "L")
 }
 

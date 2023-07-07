@@ -52,8 +52,8 @@ const (
 type FullAdresse struct {
 	FullForename string `json:"fullForename"`
 	FullSurname  string `json:"fullSurname"`
-	CompanyName  string `json:"companyName"`
 	NameTitle    string `json:"nameTitle"`
+	CompanyName  string `json:"companyName"`
 	Address      struct {
 		Road             string `json:"road"`
 		HouseNumber      string `json:"houseNumber"`
