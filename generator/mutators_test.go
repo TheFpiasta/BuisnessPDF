@@ -49,7 +49,7 @@ func TestPDFGenerator_GetCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -92,7 +92,7 @@ func TestPDFGenerator_GetError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -145,7 +145,7 @@ func TestPDFGenerator_GetFontGapY(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -195,7 +195,7 @@ func TestPDFGenerator_GetFontName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -245,7 +245,7 @@ func TestPDFGenerator_GetFontSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -295,7 +295,7 @@ func TestPDFGenerator_GetMarginBottom(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -345,7 +345,7 @@ func TestPDFGenerator_GetMarginLeft(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -395,7 +395,7 @@ func TestPDFGenerator_GetMarginRight(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -445,7 +445,7 @@ func TestPDFGenerator_GetMarginTop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -470,7 +470,7 @@ func TestPDFGenerator_GetPdf(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -564,7 +564,7 @@ func TestPDFGenerator_SetCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -609,7 +609,7 @@ func TestPDFGenerator_SetError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -659,7 +659,7 @@ func TestPDFGenerator_SetFontGapY(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -712,7 +712,7 @@ func TestPDFGenerator_SetFontSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -811,7 +811,7 @@ func TestPDFGenerator_SetUnsafeCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return

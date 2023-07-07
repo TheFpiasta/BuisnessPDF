@@ -3,7 +3,6 @@ package generator
 import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
-	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -33,7 +32,7 @@ func TestNewPDFGenerator(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling, &_logger)
+			_, err := NewPDFGenerator(tt.args.data, tt.args.strictErrorHandling, &_logger, func() {}, func(isLastPage bool) {})
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPDFGenerator() error = %v, wantErr %v", err, tt.wantErr)
@@ -121,7 +120,7 @@ func TestPDFGenerator_NewLine(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -143,32 +142,6 @@ func TestPDFGenerator_NewLine(t *testing.T) {
 			if x, y := core.pdf.GetXY(); x != wantX || y != wantNewY {
 				t.Errorf("NewLine() got x y = %v %v, want %v %v", x, y, tt.args.oldX, wantNewY)
 			}
-		})
-	}
-}
-
-func TestPDFGenerator_PlaceMimeImageFromUrl(t *testing.T) {
-	type args struct {
-		cdnUrl   *url.URL
-		scale    float64
-		alignStr string
-	}
-	tests := []struct {
-		name string
-		data MetaData
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
-			if err != nil {
-				t.Errorf("init core error\n%s", err.Error())
-				return
-			}
-
-			core.PlaceMimeImageFromUrl(tt.args.cdnUrl, tt.args.scale, tt.args.alignStr)
 		})
 	}
 }
@@ -223,7 +196,7 @@ func TestPDFGenerator_PrintLnPdfText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -298,7 +271,7 @@ func TestPDFGenerator_PrintPdfText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -420,7 +393,7 @@ func TestPDFGenerator_PrintPdfTextFormatted(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
@@ -610,7 +583,7 @@ func TestPDFGenerator_extractLinesFromText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			core, err := NewPDFGenerator(tt.data, false, &_logger)
+			core, err := NewPDFGenerator(tt.data, false, &_logger, func() {}, func(isLastPage bool) {})
 			if err != nil {
 				t.Errorf("init core error\n%s", err.Error())
 				return
