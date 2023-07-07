@@ -147,7 +147,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.printMetaData(pdfGen)
 	i.printBody()
 
-	//din5008aPageNumbering(i.pdfGen, i.footerStartY)
+	din5008aPageNumbering(i.pdfGen, i.footerStartY)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
