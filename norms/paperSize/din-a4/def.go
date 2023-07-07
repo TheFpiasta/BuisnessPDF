@@ -1,4 +1,4 @@
-package DIN_A4
+package dinA4
 
 const (
 	Width  = 210.

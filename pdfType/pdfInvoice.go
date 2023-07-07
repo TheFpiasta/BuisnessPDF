@@ -2,7 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
-	din5008A "SimpleInvoice/norms/letter/DIN-5008-a"
+	din5008a "SimpleInvoice/norms/letter/din-5008-a"
 	"encoding/json"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
@@ -57,14 +57,14 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 			Margin: pdfMargin{
 				Left:   25,
 				Right:  20,
-				Top:    din5008A.AddressSenderTextStartY,
+				Top:    din5008a.AddressSenderTextStartY,
 				Bottom: 0,
 			},
 			Font: pdfFont{
 				FontName:    "openSans",
-				SizeDefault: din5008A.FontSize10,
-				SizeSmall:   din5008A.FontSizeSender8,
-				SizeLarge:   din5008A.FontSize10 + 5,
+				SizeDefault: din5008a.FontSize10,
+				SizeSmall:   din5008a.FontSizeSender8,
+				SizeLarge:   din5008a.FontSize10 + 5,
 			},
 		},
 		logger:           logger,
@@ -147,13 +147,13 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.printMetaData(pdfGen)
 	i.printBody()
 
-	din5008aPageNumbering(i.pdfGen, i.footerStartY)
+	din5008a.PageNumbering(i.pdfGen, i.footerStartY)
 
 	return pdfGen.GetPdf(), pdfGen.GetError()
 }
 
 func (i *Invoice) printBody() {
-	din5008aBody(i.pdfGen, func() {
+	din5008a.Body(i.pdfGen, func() {
 		i.printHeadlineAndOpeningText()
 		i.printInvoiceTable()
 		i.printClosingText()
@@ -161,9 +161,9 @@ func (i *Invoice) printBody() {
 }
 
 func (i *Invoice) printAddressee() {
-	din5008aSenderAdresse(i.pdfGen, i.data.SenderAddress)
-	din5008aReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
-	i.pdfGen.SetFontGapY(din5008A.FontGab10)
+	din5008a.SenderAdresse(i.pdfGen, i.data.SenderAddress)
+	din5008a.ReceiverAdresse(i.pdfGen, i.data.ReceiverAddress)
+	i.pdfGen.SetFontGapY(din5008a.FontGab10)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 }
 
@@ -173,17 +173,14 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 		value string
 	}
 
-	var data []struct {
-		name  string
-		value string
-	}
+	var data []din5008a.InfoData
 
-	data = append(data, Metadata{name: "Kundennummer:", value: i.data.InvoiceMeta.CustomerNumber})
-	data = append(data, Metadata{name: "Rechnungsnummer:", value: i.data.InvoiceMeta.InvoiceNumber})
-	data = append(data, Metadata{name: "Datum:", value: i.data.InvoiceMeta.InvoiceDate})
-	data = append(data, Metadata{name: "Projektnummer:", value: i.data.InvoiceMeta.ProjectNumber})
+	data = append(data, din5008a.InfoData{Name: "Kundennummer:", Value: i.data.InvoiceMeta.CustomerNumber})
+	data = append(data, din5008a.InfoData{Name: "Rechnungsnummer:", Value: i.data.InvoiceMeta.InvoiceNumber})
+	data = append(data, din5008a.InfoData{Name: "Datum:", Value: i.data.InvoiceMeta.InvoiceDate})
+	data = append(data, din5008a.InfoData{Name: "Projektnummer:", Value: i.data.InvoiceMeta.ProjectNumber})
 
-	din5008atMetaInfo(pdfGen, i.defaultLineColor, data)
+	din5008a.MetaInfo(pdfGen, i.defaultLineColor, data)
 }
 
 func (i *Invoice) printHeadlineAndOpeningText() {
@@ -192,8 +189,8 @@ func (i *Invoice) printHeadlineAndOpeningText() {
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.HeadlineText+" "+i.data.InvoiceMeta.InvoiceNumber, "b", "L")
 
 	//opening
-	i.pdfGen.SetFontSize(din5008A.FontSize10)
-	i.pdfGen.SetFontGapY(din5008A.FontGab10)
+	i.pdfGen.SetFontSize(din5008a.FontSize10)
+	i.pdfGen.SetFontGapY(din5008a.FontGab10)
 	i.pdfGen.NewLine(i.pdfGen.GetMarginLeft())
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.OpeningText, "", "L")
 }
@@ -288,7 +285,7 @@ func (i *Invoice) printClosingText() {
 }
 
 func (i *Invoice) printFooter() {
-	footerStartY := din5008aFooter(i.pdfGen, i.defaultLineColor, i.data.SenderInfo, i.data.SenderAddress)
+	footerStartY := din5008a.Footer(i.pdfGen, i.defaultLineColor, i.data.SenderInfo, i.data.SenderAddress)
 	if i.footerStartY == 0 {
 		i.footerStartY = footerStartY
 	}
@@ -296,6 +293,6 @@ func (i *Invoice) printFooter() {
 
 func (i *Invoice) printHeader() {
 	if i.data.SenderInfo.MimeLogoUrl != "" {
-		din5008aMimeImage(i.pdfGen, i.data.SenderInfo.MimeLogoUrl)
+		din5008a.MimeImage(i.pdfGen, i.data.SenderInfo.MimeLogoUrl)
 	}
 }

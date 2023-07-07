@@ -1,12 +1,12 @@
-package DIN_5008_a
+package din5008a
 
-import DIN_A4 "SimpleInvoice/norms/paperSize/DIN-A4"
+import dinA4 "SimpleInvoice/norms/paperSize/din-a4"
 
 // in mm
 // for DIN A4 paper
 const (
-	Width  = DIN_A4.Width
-	Height = DIN_A4.Height
+	Width  = dinA4.Width
+	Height = dinA4.Height
 
 	FontSizeSender8   = 8
 	FontGabSender8    = 0.5
@@ -24,7 +24,7 @@ const (
 
 	HeaderStartX = 0.
 	HeaderStartY = 0.
-	HeaderStopX  = DIN_A4.Width
+	HeaderStopX  = dinA4.Width
 	HeaderStopY  = 27.
 
 	AddressSenderTextStartX = 25.

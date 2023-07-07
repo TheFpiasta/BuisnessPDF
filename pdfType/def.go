@@ -36,7 +36,7 @@ type FullPersonInfo struct {
 	FullForename string `json:"fullForename"`
 	FullSurname  string `json:"fullSurname"`
 	CompanyName  string `json:"companyName"`
-	Supplement   string `json:"supplement"`
+	NameTitle    string `json:"nameTitle"`
 	Address      struct {
 		Road             string `json:"road"`
 		HouseNumber      string `json:"houseNumber"`
