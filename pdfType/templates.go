@@ -119,7 +119,7 @@ func din5008atMetaInfo(pdfGen *generator.PDFGenerator, defaultLineColor generato
 
 	_, y := pdfGen.GetCursor()
 
-	pdfGen.DrawLine(din5008A.MetaInfoStartX, din5008A.MetaInfoStartY, din5008A.MetaInfoStartX, y-din5008A.FontGab10, defaultLineColor, 1)
+	pdfGen.DrawLine(din5008A.MetaInfoStartX, din5008A.MetaInfoStartY, din5008A.MetaInfoStartX, y-din5008A.FontGab10, defaultLineColor, 0)
 }
 
 func din5008aReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress FullPersonInfo) {

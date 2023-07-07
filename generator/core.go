@@ -61,6 +61,8 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 	}
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
+	pdf.SetLineWidth(data.DefaultLineWidth)
+	pdf.SetDrawColor(int(data.DefaultLineColor.R), int(data.DefaultLineColor.G), int(data.DefaultLineColor.B))
 	pdf.SetHomeXY()
 	pdf.SetAutoPageBreak(true, data.MarginBottom)
 	//pdf.AliasNbPages("{entute}")
@@ -368,8 +370,6 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 	}
 	// <--
 
-	core.pdf.SetLineWidth(lineWith)
-	core.pdf.SetDrawColor(int(color.R), int(color.G), int(color.B))
 	core.pdf.Line(x1, y1, x2, y2)
 }
 

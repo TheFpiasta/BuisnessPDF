@@ -50,14 +50,16 @@ type PDFGenerator struct {
 //	"cm" for centimeter, or
 //	"in" for inch.
 type MetaData struct {
-	FontName     string
-	FontGapY     float64
-	FontSize     float64
-	MarginLeft   float64
-	MarginTop    float64
-	MarginRight  float64
-	MarginBottom float64
-	Unit         string
+	FontName         string
+	FontGapY         float64
+	FontSize         float64
+	MarginLeft       float64
+	MarginTop        float64
+	MarginRight      float64
+	MarginBottom     float64
+	Unit             string
+	DefaultLineWidth float64
+	DefaultLineColor Color
 }
 
 // Generator specify all public methods.
