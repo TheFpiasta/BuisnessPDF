@@ -2,7 +2,6 @@ package din5008a
 
 import (
 	"SimpleInvoice/generator"
-	"SimpleInvoice/pdfType"
 	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/rs/zerolog"
@@ -39,7 +38,7 @@ func MimeImage(pdfGen *generator.PDFGenerator, strUrl string) {
 	pdfGen.PlaceRegisteredImageOnPage(urlStruct.String(), "R", scale)
 }
 
-func MetaInfo(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, data []InfoData) {
+func MetaInfo(pdfGen *generator.PDFGenerator, data []InfoData) {
 	var maxNameLength = 0.
 	var maxValueLength = 0.
 
@@ -75,10 +74,10 @@ func MetaInfo(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, 
 
 	_, y := pdfGen.GetCursor()
 
-	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStartX, y-FontGab10, defaultLineColor, 0)
+	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStartX, y-FontGab10)
 }
 
-func ReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress pdfType.FullPersonInfo) {
+func ReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress FullAdresse) {
 	pdfGen.SetCursor(AddressReceiverTextStartX, AddressReceiverTextStartY)
 
 	pdfGen.SetFontSize(FontSize10)
@@ -105,7 +104,7 @@ func ReceiverAdresse(pdfGen *generator.PDFGenerator, receiverAddress pdfType.Ful
 	}
 }
 
-func SenderAdresse(pdfGen *generator.PDFGenerator, senderInfo pdfType.FullPersonInfo) {
+func SenderAdresse(pdfGen *generator.PDFGenerator, senderInfo FullAdresse) {
 
 	var addressSenderCompanySmall = ""
 
@@ -161,51 +160,24 @@ func SenderAdresse(pdfGen *generator.PDFGenerator, senderInfo pdfType.FullPerson
 	pdfGen.SetFontGapY(FontGab10)
 }
 
-func Footer(pdfGen *generator.PDFGenerator, defaultLineColor generator.Color, SenderInfo pdfType.SenderInfo, SenderAddress pdfType.FullPersonInfo) (footerStartY float64) {
-
+func Footer(content func(maxFooterHeight float64) (footerStartY float64), pdfGen *generator.PDFGenerator) (footerStartY float64, err error) {
 	const startAtY = Height - MarginPageNumberY
-	const startPageNumberY = 282
-	var currentStartX float64
-	var currentY float64
 
 	footerStartY = Height
 
 	pdfGen.SetFontSize(FontSize10)
 	pdfGen.SetFontGapY(FontGabReceiver8)
+	pdfGen.DrawLine(BodyStartX, startAtY, BodyStopX, startAtY)
+	pdfGen.SetUnsafeCursor(BodyStartX, startAtY)
 
-	pdfGen.DrawLine(BodyStartX, startAtY, BodyStopX, startAtY, defaultLineColor, 0)
+	footerStartY = content(startAtY)
+	if footerStartY <= BodyStartY || footerStartY > Height {
+		return -1, errorsWithStack.New(fmt.Sprintf("footerStartY %.4f out of range [%.4f, %.4f)", footerStartY, BodyStartY, Width))
+	}
 
-	// calculate height
-	pdfGen.SetUnsafeCursor(0, startAtY)
-	pdfGen.PreviousLine(0)
-	pdfGen.PreviousLine(0)
-	pdfGen.PreviousLine(0)
-	pdfGen.PreviousLine(0)
-	_, currentY = pdfGen.GetCursor()
-	footerStartY = currentY
+	pdfGen.DrawLine(BodyStartX, footerStartY-1, BodyStopX, footerStartY-1)
 
-	currentStartX = BodyStartX
-	pdfGen.SetCursor(currentStartX, footerStartY)
-	pdfGen.PrintLnPdfText(SenderInfo.Web, "", "L")
-	pdfGen.PrintLnPdfText(SenderInfo.Phone, "", "L")
-	pdfGen.PrintLnPdfText(SenderInfo.Email, "", "L")
-
-	currentStartX = ((BodyStopX - BodyStartX) / 2) + BodyStartX
-	pdfGen.SetCursor(currentStartX, footerStartY)
-	pdfGen.PrintLnPdfText(SenderAddress.CompanyName, "", "C")
-	pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", SenderAddress.Address.Road, SenderAddress.Address.HouseNumber), "", "C")
-	pdfGen.PrintLnPdfText(SenderAddress.Address.ZipCode+" "+SenderAddress.Address.CityName, "", "C")
-	pdfGen.PrintLnPdfText(SenderInfo.TaxNumber, "", "C")
-
-	currentStartX = BodyStopX
-	pdfGen.SetCursor(currentStartX, footerStartY)
-	pdfGen.PrintLnPdfText(SenderInfo.BankName, "", "R")
-	pdfGen.PrintLnPdfText(SenderInfo.Iban, "", "R")
-	pdfGen.PrintLnPdfText(SenderInfo.Bic, "", "R")
-
-	pdfGen.DrawLine(BodyStartX, footerStartY-1, BodyStopX, footerStartY-1, defaultLineColor, 0)
-
-	return footerStartY
+	return footerStartY, nil
 }
 
 func PageNumbering(pdfGen *generator.PDFGenerator, footerStartY float64) {
@@ -241,22 +213,22 @@ func Body(pdfGen *generator.PDFGenerator, bodyGenerationFunc func()) {
 
 func ShowDebugFrames(pdfGen *generator.PDFGenerator, logger *zerolog.Logger) {
 	logger.Warn().Msg("show debug frames")
-	pdfGen.DrawLine(HeaderStartX, HeaderStopY, HeaderStopX, HeaderStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
+	pdfGen.DrawLine(HeaderStartX, HeaderStopY, HeaderStopX, HeaderStopY)
 
-	pdfGen.DrawLine(AddressSenderTextStartX, AddressSenderTextStartY, AddressSenderTextStartX, AddressSenderTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(AddressSenderTextStartX, AddressSenderTextStopY, AddressSenderTextStopX, AddressSenderTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(AddressSenderTextStopX, AddressSenderTextStartY, AddressSenderTextStopX, AddressSenderTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
+	pdfGen.DrawLine(AddressSenderTextStartX, AddressSenderTextStartY, AddressSenderTextStartX, AddressSenderTextStopY)
+	pdfGen.DrawLine(AddressSenderTextStartX, AddressSenderTextStopY, AddressSenderTextStopX, AddressSenderTextStopY)
+	pdfGen.DrawLine(AddressSenderTextStopX, AddressSenderTextStartY, AddressSenderTextStopX, AddressSenderTextStopY)
 
-	pdfGen.DrawLine(AddressReceiverTextStartX, AddressReceiverTextStartY, AddressReceiverTextStartX, AddressReceiverTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(AddressReceiverTextStartX, AddressReceiverTextStopY, AddressReceiverTextStopX, AddressReceiverTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(AddressReceiverTextStopX, AddressReceiverTextStartY, AddressReceiverTextStopX, AddressReceiverTextStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
+	pdfGen.DrawLine(AddressReceiverTextStartX, AddressReceiverTextStartY, AddressReceiverTextStartX, AddressReceiverTextStopY)
+	pdfGen.DrawLine(AddressReceiverTextStartX, AddressReceiverTextStopY, AddressReceiverTextStopX, AddressReceiverTextStopY)
+	pdfGen.DrawLine(AddressReceiverTextStopX, AddressReceiverTextStartY, AddressReceiverTextStopX, AddressReceiverTextStopY)
 
-	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStopX, MetaInfoStartY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStopY, MetaInfoStopX, MetaInfoStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStartX, MetaInfoStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(MetaInfoStopX, MetaInfoStartY, MetaInfoStopX, MetaInfoStopY, generator.Color{R: 255, G: 64, B: 64}, 0)
+	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStopX, MetaInfoStartY)
+	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStopY, MetaInfoStopX, MetaInfoStopY)
+	pdfGen.DrawLine(MetaInfoStartX, MetaInfoStartY, MetaInfoStartX, MetaInfoStopY)
+	pdfGen.DrawLine(MetaInfoStopX, MetaInfoStartY, MetaInfoStopX, MetaInfoStopY)
 
-	pdfGen.DrawLine(BodyStartX, BodyStartY, BodyStopX, BodyStartY, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(BodyStartX, BodyStartY, BodyStartX, Height-10, generator.Color{R: 255, G: 64, B: 64}, 0)
-	pdfGen.DrawLine(BodyStopX, BodyStartY, BodyStopX, Height-10, generator.Color{R: 255, G: 64, B: 64}, 0)
+	pdfGen.DrawLine(BodyStartX, BodyStartY, BodyStopX, BodyStartY)
+	pdfGen.DrawLine(BodyStartX, BodyStartY, BodyStartX, Height-10)
+	pdfGen.DrawLine(BodyStopX, BodyStartY, BodyStopX, Height-10)
 }

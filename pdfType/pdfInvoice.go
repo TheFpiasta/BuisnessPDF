@@ -4,6 +4,7 @@ import (
 	"SimpleInvoice/generator"
 	din5008a "SimpleInvoice/norms/letter/din-5008-a"
 	"encoding/json"
+	"fmt"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -13,19 +14,18 @@ import (
 )
 
 type Invoice struct {
-	data             invoiceRequestData
-	meta             PdfMeta
-	logger           *zerolog.Logger
-	printErrStack    bool
-	pdfGen           *generator.PDFGenerator
-	defaultLineColor generator.Color
-	footerStartY     float64
+	data          invoiceRequestData
+	meta          PdfMeta
+	logger        *zerolog.Logger
+	printErrStack bool
+	pdfGen        *generator.PDFGenerator
+	footerStartY  float64
 }
 
 type invoiceRequestData struct {
-	SenderAddress   FullPersonInfo `json:"senderAddress"`
-	ReceiverAddress FullPersonInfo `json:"receiverAddress"`
-	SenderInfo      SenderInfo     `json:"senderInfo"`
+	SenderAddress   din5008a.FullAdresse `json:"senderAddress"`
+	ReceiverAddress din5008a.FullAdresse `json:"receiverAddress"`
+	SenderInfo      SenderInfo           `json:"senderInfo"`
 	InvoiceMeta     struct {
 		InvoiceNumber  string `json:"invoiceNumber"`
 		InvoiceDate    string `json:"invoiceDate"`
@@ -67,9 +67,8 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 				SizeLarge:   din5008a.FontSize10 + 5,
 			},
 		},
-		logger:           logger,
-		printErrStack:    logger.GetLevel() <= zerolog.DebugLevel,
-		defaultLineColor: generator.Color{R: 200, G: 200, B: 200},
+		logger:        logger,
+		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 	}
 }
 
@@ -115,6 +114,11 @@ func (i *Invoice) LogError(err error) {
 func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 	i.logger.Debug().Msg("generate invoice")
 
+	//if lineWith < 0 {
+	//	core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed.")))
+	//	return
+	//}
+
 	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
 		FontName:         "OpenSans",
 		FontGapY:         1.3,
@@ -125,7 +129,7 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 		MarginBottom:     i.meta.Margin.Bottom,
 		Unit:             "mm",
 		DefaultLineWidth: 0.4,
-		DefaultLineColor: i.defaultLineColor,
+		DefaultLineColor: generator.Color{R: 200, G: 200, B: 200},
 	},
 		false,
 		i.logger,
@@ -180,7 +184,7 @@ func (i *Invoice) printMetaData(pdfGen *generator.PDFGenerator) {
 	data = append(data, din5008a.InfoData{Name: "Datum:", Value: i.data.InvoiceMeta.InvoiceDate})
 	data = append(data, din5008a.InfoData{Name: "Projektnummer:", Value: i.data.InvoiceMeta.ProjectNumber})
 
-	din5008a.MetaInfo(pdfGen, i.defaultLineColor, data)
+	din5008a.MetaInfo(pdfGen, data)
 }
 
 func (i *Invoice) printHeadlineAndOpeningText() {
@@ -285,10 +289,49 @@ func (i *Invoice) printClosingText() {
 }
 
 func (i *Invoice) printFooter() {
-	footerStartY := din5008a.Footer(i.pdfGen, i.defaultLineColor, i.data.SenderInfo, i.data.SenderAddress)
+	footerStartY, err := din5008a.Footer(i.printFooterContent, i.pdfGen)
+
+	if err != nil {
+		i.pdfGen.SetError(err)
+	}
+
 	if i.footerStartY == 0 {
 		i.footerStartY = footerStartY
 	}
+}
+
+func (i *Invoice) printFooterContent(maxFooterHeight float64) (footerStartY float64) {
+	// calculate height
+	var currentStartX float64
+	var currentY float64
+	i.pdfGen.SetUnsafeCursor(din5008a.BodyStartX, maxFooterHeight)
+	i.pdfGen.PreviousLine(0)
+	i.pdfGen.PreviousLine(0)
+	i.pdfGen.PreviousLine(0)
+	i.pdfGen.PreviousLine(0)
+	_, currentY = i.pdfGen.GetCursor()
+	footerStartY = currentY
+
+	currentStartX = din5008a.BodyStartX
+	i.pdfGen.SetCursor(currentStartX, footerStartY)
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.Web, "", "L")
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.Phone, "", "L")
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.Email, "", "L")
+
+	currentStartX = ((din5008a.BodyStopX - din5008a.BodyStartX) / 2) + din5008a.BodyStartX
+	i.pdfGen.SetCursor(currentStartX, footerStartY)
+	i.pdfGen.PrintLnPdfText(i.data.SenderAddress.CompanyName, "", "C")
+	i.pdfGen.PrintLnPdfText(fmt.Sprintf("%s %s", i.data.SenderAddress.Address.Road, i.data.SenderAddress.Address.HouseNumber), "", "C")
+	i.pdfGen.PrintLnPdfText(i.data.SenderAddress.Address.ZipCode+" "+i.data.SenderAddress.Address.CityName, "", "C")
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.TaxNumber, "", "C")
+
+	currentStartX = din5008a.BodyStopX
+	i.pdfGen.SetCursor(currentStartX, footerStartY)
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.BankName, "", "R")
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.Iban, "", "R")
+	i.pdfGen.PrintLnPdfText(i.data.SenderInfo.Bic, "", "R")
+
+	return footerStartY
 }
 
 func (i *Invoice) printHeader() {

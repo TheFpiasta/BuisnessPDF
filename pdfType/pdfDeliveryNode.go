@@ -164,7 +164,7 @@ func (d *DeliveryNode) printAddressee() {
 
 func (d *DeliveryNode) printMetaData(pdfGen *generator.PDFGenerator) {
 	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-	pdfGen.DrawLine(d.meta.Margin.Left+98, 56, d.meta.Margin.Left+98, 80, d.defaultLineColor, 0)
+	pdfGen.DrawLine(d.meta.Margin.Left+98, 56, d.meta.Margin.Left+98, 80)
 	pdfGen.SetCursor(d.meta.Margin.Left+100, 56)
 	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
 	pdfGen.PrintLnPdfText("Liefernummer:", "", "L")
@@ -254,7 +254,7 @@ func (d *DeliveryNode) printSignaturePart(pdfGen *generator.PDFGenerator, headTe
 	var cY float64
 
 	pdfGen.SetCursor(startX, startY)
-	pdfGen.DrawLine(startX, startY, startX+nameLength, startY, lineColor, 0)
+	pdfGen.DrawLine(startX, startY, startX+nameLength, startY)
 	_, cY = pdfGen.GetCursor()
 	pdfGen.SetCursor(startX, cY+1)
 	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
@@ -271,8 +271,8 @@ func (d *DeliveryNode) printSignaturePart(pdfGen *generator.PDFGenerator, headTe
 	var dateEndX = startX + dateLength
 	var signatureStartX = startX + dateLength + gabLength
 	var signatureEndX = startX + dateLength + gabLength + signatureLength
-	pdfGen.DrawLine(startX, cY, dateEndX, cY, lineColor, 0)
-	pdfGen.DrawLine(signatureStartX, cY, signatureEndX, cY, lineColor, 0)
+	pdfGen.DrawLine(startX, cY, dateEndX, cY)
+	pdfGen.DrawLine(signatureStartX, cY, signatureEndX, cY)
 	_, cY = pdfGen.GetCursor()
 	pdfGen.SetCursor(startX, cY+1)
 	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
@@ -290,7 +290,7 @@ func (d *DeliveryNode) printFooter() {
 	pageWidth, _ := d.pdfGen.GetPdf().GetPageSize()
 
 	d.pdfGen.SetFontSize(d.meta.Font.SizeSmall)
-	d.pdfGen.DrawLine(d.meta.Margin.Left, startAtY, pageWidth-d.meta.Margin.Right, startAtY, d.defaultLineColor, 0)
+	d.pdfGen.DrawLine(d.meta.Margin.Left, startAtY, pageWidth-d.meta.Margin.Right, startAtY)
 
 	d.pdfGen.SetCursor(d.meta.Margin.Left, startAtY+gabY)
 	//pdfGen.PrintLnPdfText("Web", "", "L")
@@ -304,7 +304,7 @@ func (d *DeliveryNode) printFooter() {
 	//pdfGen.PrintLnPdfText("E-Mail", "", "R")
 	d.pdfGen.PrintPdfText(d.data.SenderInfo.Email, "", "R")
 
-	d.pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY, d.defaultLineColor, 0)
+	d.pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY)
 	d.pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
 	pageNumbering := fmt.Sprintf("Seite %d", d.pdfGen.GetPdf().PageNo())
 	d.pdfGen.PrintLnPdfText(pageNumbering, "", "C")

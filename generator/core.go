@@ -336,17 +336,12 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 // color specifies the color of the line.
 //
 // lineWith specifies the thinness of the line in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64) {
+func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float64) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
 
 	// --> validate inputs
-	if lineWith < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed.")))
-		return
-	}
-
 	pageWidth, pageLength := core.pdf.GetPageSize()
 
 	if x1 < 0 || x1 > pageWidth {

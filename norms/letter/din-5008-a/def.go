@@ -48,3 +48,19 @@ const (
 
 	MarginPageNumberY = 4.23
 )
+
+type FullAdresse struct {
+	FullForename string `json:"fullForename"`
+	FullSurname  string `json:"fullSurname"`
+	CompanyName  string `json:"companyName"`
+	NameTitle    string `json:"nameTitle"`
+	Address      struct {
+		Road             string `json:"road"`
+		HouseNumber      string `json:"houseNumber"`
+		StreetSupplement string `json:"streetSupplement"`
+		ZipCode          string `json:"zipCode"`
+		CityName         string `json:"cityName"`
+		Country          string `json:"country"`
+		CountryCode      string `json:"countryCode"`
+	} `json:"address"`
+}
