@@ -19,7 +19,7 @@ import (
 // If strictErrorHandling is set to false, all methods are tried to execute executed, even if a pdf internal error is set.
 // This may cause the PDF internal error to be overwritten by a new error.
 // Use GetError() to get the current pdf internal error.
-func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Logger) (gen *PDFGenerator, err error) {
+func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Logger, headerFunction func(), footerFunction func(isLastPage bool)) (gen *PDFGenerator, err error) {
 	// --> validate inputs
 	if data.FontGapY < 0 {
 		return nil, errorsWithStack.New(fmt.Sprintf("A negative FontGapY (%f) is not allowed.", data.FontGapY))
@@ -61,13 +61,21 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 	}
 	pdf.SetFont(data.FontName, "", data.FontSize)
 	pdf.SetMargins(data.MarginLeft, data.MarginTop, data.MarginRight)
+	pdf.SetLineWidth(data.DefaultLineWidth)
+	pdf.SetDrawColor(int(data.DefaultLineColor.R), int(data.DefaultLineColor.G), int(data.DefaultLineColor.B))
 	pdf.SetHomeXY()
 	pdf.SetAutoPageBreak(true, data.MarginBottom)
 	//pdf.AliasNbPages("{entute}")
 	//pdf.SetHeaderFuncMode(, true)
 	//pdf.SetFooterFunc()
-	pdf.AddPage()
+
+	pdf.SetHeaderFuncMode(headerFunction, true)
+	pdf.SetFooterFuncLpi(footerFunction)
+	//pdf.SetFooterFunc(func() {
+	//	footerFunction(false)
+	//})
 	pdf.SetHomeXY()
+
 	if pdf.Err() {
 		return nil, pdf.Error()
 	}
@@ -81,6 +89,7 @@ func NewPDFGenerator(data MetaData, strictErrorHandling bool, logger *zerolog.Lo
 	gen.strictErrorHandling = strictErrorHandling
 	gen.maxSaveX = pageWidth - data.MarginRight
 	gen.maxSaveY = pageHeight - data.MarginBottom
+	gen.registeredImageTypes = map[string]string{}
 
 	return gen, pdf.Error()
 }
@@ -213,6 +222,25 @@ func (core *PDFGenerator) NewLine(oldX float64) {
 	core.pdf.SetXY(oldX, newY)
 }
 
+// PreviousLine sets the cursor on the previous line dependent on the given X-position.
+// (mostly use the start X-point of the current line.)
+func (core *PDFGenerator) PreviousLine(oldX float64) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	// --> validate inputs
+	if oldX < 0 {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative oldX is not allowed.")))
+		return
+	}
+	// <--
+
+	_, lineHeight := core.pdf.GetFontSize()
+	newY := core.pdf.GetY() - lineHeight - core.data.FontGapY
+	core.pdf.SetXY(oldX, newY)
+}
+
 // extractLinesFromText split a string on newline character (\n) and return the parts as an array.
 // Prefixing whitespaces (ONLY " ")! will be automatically removed on each part.
 func (core *PDFGenerator) extractLinesFromText(text string) (textLines []string) {
@@ -311,17 +339,12 @@ func (core *PDFGenerator) PrintPdfTextFormatted(text string, styleStr string, al
 // color specifies the color of the line.
 //
 // lineWith specifies the thinness of the line in the unit of measure specified in NewPDFGenerator().
-func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float64, color Color, lineWith float64) {
+func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float64) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
 
 	// --> validate inputs
-	if lineWith < 0 {
-		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("A negative lineWith is not allowed.")))
-		return
-	}
-
 	pageWidth, pageLength := core.pdf.GetPageSize()
 
 	if x1 < 0 || x1 > pageWidth {
@@ -345,15 +368,54 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 	}
 	// <--
 
-	core.pdf.SetLineWidth(lineWith)
-	core.pdf.SetDrawColor(int(color.R), int(color.G), int(color.B))
 	core.pdf.Line(x1, y1, x2, y2)
 }
 
-// PlaceMimeImageFromUrl downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL and puts it in the current page.
-// The top side of the image will be snap to the current cursor position.
+// RegisterMimeImageToPdf downloade a JPEG, PNG or GIF image (from mostly a Content Delivery Network (CDN)) URL
+// and puts it in the current page.
+// The image will be registered in the PDF but not place on a page!
+// Use PlaceRegisteredImageOnPage to place the image on a page.
 //
 // cdnUrl specifies a parsed (CDN) URL.
+//
+// return imageNameStr, the image identifier for placing the image on a pdf page.
+func (core *PDFGenerator) RegisterMimeImageToPdf(cdnUrl *url.URL) (imageNameStr string) {
+	if core.strictErrorHandling == true && core.pdf.Err() {
+		return
+	}
+
+	var rsp *http.Response
+
+	rsp, err := http.Get(cdnUrl.String())
+	if err != nil {
+		core.pdf.SetError(errorsWithStack.New(err))
+		return
+	}
+
+	imageNameStr = cdnUrl.String()
+
+	imageType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
+
+	switch imageType {
+	case "jpg":
+	case "png":
+	case "gif":
+		break
+	default:
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image type is not supported.")))
+		return ""
+	}
+
+	core.pdf.RegisterImageReader(cdnUrl.String(), imageType, rsp.Body)
+	core.registeredImageTypes[imageNameStr] = imageType
+
+	return imageNameStr
+}
+
+// PlaceRegisteredImageOnPage place a registered image (see RegisterMimeImageToPdf) on the current pdf page.
+// The top side of the image will be snap to the current cursor position.
+//
+// imageNameStr specifies the registered image identifier.
 //
 // scale specifies the scaling factor into which the image is drawn.
 // The value must be grater then 0. Use scaling of 1 for no scaling.
@@ -365,7 +427,7 @@ func (core *PDFGenerator) DrawLine(x1 float64, y1 float64, x2 float64, y2 float6
 //	"L" for align the left side of the image to the cursor,
 //	"R" for align the right side of the image to the cursor, and
 //	"C" for align the center of the image to the cursor.
-func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, alignStr string) {
+func (core *PDFGenerator) PlaceRegisteredImageOnPage(imageNameStr string, alignStr string, scale float64) {
 	if core.strictErrorHandling == true && core.pdf.Err() {
 		return
 	}
@@ -375,19 +437,14 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("Image scale of 0 is not valide.")))
 		return
 	}
-	// <--
 
-	var rsp *http.Response
-
-	rsp, err := http.Get(cdnUrl.String())
-	if err != nil {
-		core.pdf.SetError(errorsWithStack.New(err))
+	if t := core.registeredImageTypes[imageNameStr]; t == "" {
+		core.pdf.SetError(errorsWithStack.New(fmt.Sprintf("The image is not registerd.")))
 		return
 	}
+	// <--
 
-	imageMimeType := core.pdf.ImageTypeFromMime(rsp.Header["Content-Type"][0])
-	imageInfoType := core.pdf.RegisterImageReader(cdnUrl.String(), imageMimeType, rsp.Body)
-
+	imageInfoType := core.pdf.GetImageInfo(imageNameStr)
 	posX, posY := core.GetCursor()
 	imgWd, imgHt := imageInfoType.Extent()
 	imgWd, imgHt = imgWd*scale, imgHt*scale
@@ -405,7 +462,7 @@ func (core *PDFGenerator) PlaceMimeImageFromUrl(cdnUrl *url.URL, scale float64, 
 	}
 
 	if core.pdf.Ok() {
-		core.pdf.Image(cdnUrl.String(), posX, posY, imgWd, imgHt, false, imageMimeType, 0, "")
+		core.pdf.Image(imageNameStr, posX, posY, imgWd, imgHt, false, core.registeredImageTypes[imageNameStr], 0, "")
 	}
 
 	return
@@ -590,9 +647,10 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 	}
 }
 
-func (core *PDFGenerator) addNewPageIfNecessary() {
-	//var currentYPos float64
-	//var maxSaveYPos float64
+func (core *PDFGenerator) NewPage() {
+	core.pdf.AddPage()
+}
 
-	//todo implement?
+func (core *PDFGenerator) ComputeStringLength(str string) (length float64) {
+	return core.pdf.GetStringWidth(str)
 }

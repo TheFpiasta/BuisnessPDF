@@ -145,3 +145,23 @@ func (core *PDFGenerator) SetUnsafeCursor(x float64, y float64) {
 
 	core.pdf.SetXY(x, y)
 }
+
+func (core *PDFGenerator) GetRegisteredImageExtent(imageNameStr string) (w float64, h float64) {
+	return core.pdf.GetImageInfo(imageNameStr).Extent()
+}
+
+func (core *PDFGenerator) ImageIsRegistered(imageNameStr string) bool {
+	return core.registeredImageTypes[imageNameStr] != ""
+}
+
+func (core *PDFGenerator) GetCurrentPageNumber() int {
+	return core.pdf.PageNo()
+}
+
+func (core *PDFGenerator) GetTotalNumber() int {
+	return core.pdf.PageNo()
+}
+
+func (core *PDFGenerator) GoToPage(pageNumber int) {
+	core.pdf.SetPage(pageNumber)
+}

@@ -2,6 +2,7 @@ package pdfType
 
 import (
 	"SimpleInvoice/generator"
+	din5008a "SimpleInvoice/norms/letter/din-5008-a"
 	"encoding/json"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
@@ -11,18 +12,18 @@ import (
 )
 
 type DeliveryNode struct {
-	data             deliveryNodeRequestData
-	meta             PdfMeta
-	logger           *zerolog.Logger
-	printErrStack    bool
-	pdfGen           *generator.PDFGenerator
-	defaultLineColor generator.Color
+	data          deliveryNodeRequestData
+	meta          PdfMeta
+	logger        *zerolog.Logger
+	printErrStack bool
+	pdfGen        *generator.PDFGenerator
+	footerStartY  float64
 }
 
 type deliveryNodeRequestData struct {
-	SenderAddress   FullPersonInfo `json:"senderAddress"`
-	ReceiverAddress FullPersonInfo `json:"receiverAddress"`
-	SenderInfo      SenderInfo     `json:"senderInfo"`
+	SenderAddress   din5008a.FullAdresse `json:"senderAddress"`
+	ReceiverAddress din5008a.FullAdresse `json:"receiverAddress"`
+	SenderInfo      SenderInfo           `json:"senderInfo"`
 	DeliveryMeta    struct {
 		DeliveryNodeNumber string `json:"deliveryNodeNumber"`
 		DeliveryDate       string `json:"deliveryDate"`
@@ -49,19 +50,18 @@ func NewDeliveryNode(logger *zerolog.Logger) *DeliveryNode {
 			Margin: pdfMargin{
 				Left:   25,
 				Right:  20,
-				Top:    45,
+				Top:    din5008a.AddressSenderTextStartY,
 				Bottom: 0,
 			},
 			Font: pdfFont{
 				FontName:    "openSans",
-				SizeDefault: 10,
-				SizeSmall:   8,
-				SizeLarge:   15,
+				SizeDefault: din5008a.FontSize10,
+				SizeSmall:   din5008a.FontSizeSender8,
+				SizeLarge:   din5008a.FontSize10 + 5,
 			},
 		},
-		logger:           logger,
-		printErrStack:    logger.GetLevel() <= zerolog.DebugLevel,
-		defaultLineColor: generator.Color{R: 200, G: 200, B: 200},
+		logger:        logger,
+		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 	}
 }
 
@@ -88,6 +88,7 @@ func (d *DeliveryNode) SetDataFromRequest(request *http.Request) (err error) {
 }
 
 func (d *DeliveryNode) validateData() (err error) {
+	//TODO implement
 	return err
 }
 
@@ -106,80 +107,72 @@ func (d *DeliveryNode) LogError(err error) {
 func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 	d.logger.Debug().Msg("generate delivery node")
 
-	pdfGen, err := generator.NewPDFGenerator(generator.MetaData{
-		FontName:     "OpenSans",
-		FontGapY:     1.3,
-		FontSize:     d.meta.Font.SizeDefault,
-		MarginLeft:   d.meta.Margin.Left,
-		MarginTop:    d.meta.Margin.Top,
-		MarginRight:  d.meta.Margin.Right,
-		MarginBottom: d.meta.Margin.Bottom,
-		Unit:         "mm",
-	}, false, d.logger)
+	pdfGen, err := generator.NewPDFGenerator(
+		generator.MetaData{
+			FontName:         "OpenSans",
+			FontGapY:         1.3,
+			FontSize:         d.meta.Font.SizeDefault,
+			MarginLeft:       d.meta.Margin.Left,
+			MarginTop:        d.meta.Margin.Top,
+			MarginRight:      d.meta.Margin.Right,
+			MarginBottom:     d.meta.Margin.Bottom,
+			Unit:             "mm",
+			DefaultLineWidth: 0.4,
+			DefaultLineColor: generator.Color{R: 162, G: 162, B: 162},
+		},
+		false,
+		d.logger,
+		func() {
+			d.printHeader()
+		},
+		func(isLastPage bool) {
+			d.printFooter()
+		},
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	d.pdfGen = pdfGen
+	d.pdfGen.NewPage()
 
-	if d.data.SenderInfo.MimeLogoUrl != "" {
-		d.printMimeImg()
-	}
+	d.doGeneratePdf()
 
-	d.printAddressee()
-	d.printMetaData(pdfGen)
-	d.printHeadlineAndOpeningText(pdfGen)
-	d.printDeliveryTable(pdfGen)
-	d.printClosingText(pdfGen)
-	d.printSignatureSection(pdfGen)
-	d.printFooter(pdfGen)
-
-	return pdfGen.GetPdf(), pdfGen.GetError()
+	return d.pdfGen.GetPdf(), d.pdfGen.GetError()
 }
 
-func (d *DeliveryNode) printMimeImg() {
-	pageWidth, _ := d.pdfGen.GetPdf().GetPageSize()
-	mimeImg(d.pdfGen, d.data.SenderInfo.MimeLogoUrl, pageWidth-d.meta.Margin.Right, 15, d.data.SenderInfo.MimeLogoScale)
+func (d *DeliveryNode) doGeneratePdf() {
+	var infoData []din5008a.InfoData
+	infoData = append(infoData, din5008a.InfoData{Name: "Kundennummer:", Value: d.data.DeliveryMeta.CustomerNumber})
+	infoData = append(infoData, din5008a.InfoData{Name: "Liefernummer:", Value: d.data.DeliveryMeta.DeliveryNodeNumber})
+	infoData = append(infoData, din5008a.InfoData{Name: "Datum:", Value: d.data.DeliveryMeta.DeliveryDate})
+
+	din5008a.FullAddressesAndInfoPart(d.pdfGen, d.data.SenderAddress, d.data.ReceiverAddress, infoData)
+
+	din5008a.Body(d.pdfGen, func() {
+		d.printHeadlineAndOpeningText()
+		d.printDeliveryTable()
+		d.printClosingText()
+		d.printSignatureSection()
+	})
+
+	din5008a.PageNumbering(d.pdfGen, d.footerStartY)
 }
 
-func (d *DeliveryNode) printAddressee() {
-	//pageWidth, _ := i.pdfGen.GetPdf().GetPageSize()
-	//i.pdfGen.DrawLine(i.meta.Margin.Left, i.meta.Margin.Top, pageWidth-i.meta.Margin.Right, i.meta.Margin.Top, lineColor, 0)
-
-	letterAddressSenderSmall(d.pdfGen, getAddressLine(d.data.SenderAddress), d.meta.Margin.Left, 49, d.meta.Font.SizeSmall)
-	d.pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-
-	letterReceiverAddress(d.pdfGen, d.data.ReceiverAddress, d.meta.Margin.Left, 56)
-}
-
-func (d *DeliveryNode) printMetaData(pdfGen *generator.PDFGenerator) {
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-	pdfGen.DrawLine(d.meta.Margin.Left+98, 56, d.meta.Margin.Left+98, 80, d.defaultLineColor, 0)
-	pdfGen.SetCursor(d.meta.Margin.Left+100, 56)
-	pdfGen.PrintLnPdfText("Kundennummer:", "", "L")
-	pdfGen.PrintLnPdfText("Liefernummer:", "", "L")
-	pdfGen.PrintLnPdfText("Datum:", "", "L")
-
-	pdfGen.SetCursor(d.meta.Margin.Left+140, 56)
-	pdfGen.PrintLnPdfText(d.data.DeliveryMeta.CustomerNumber, "", "L")
-	pdfGen.PrintLnPdfText(d.data.DeliveryMeta.DeliveryNodeNumber, "", "L")
-	pdfGen.PrintLnPdfText(d.data.DeliveryMeta.DeliveryDate, "", "L")
-}
-
-func (d *DeliveryNode) printHeadlineAndOpeningText(pdfGen *generator.PDFGenerator) {
+func (d *DeliveryNode) printHeadlineAndOpeningText() {
 	//Überschrift
-	pdfGen.SetCursor(d.meta.Margin.Left, 100)
-	pdfGen.SetFontSize(d.meta.Font.SizeLarge)
-	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.HeadlineText+" "+d.data.DeliveryMeta.DeliveryNodeNumber, "b", "L")
+	d.pdfGen.SetFontSize(d.meta.Font.SizeLarge)
+	d.pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.HeadlineText+" "+d.data.DeliveryMeta.DeliveryNodeNumber, "b", "L")
 
 	//opening
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-	pdfGen.NewLine(pdfGen.GetMarginLeft())
-	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.OpeningText, "", "L")
+	d.pdfGen.SetFontSize(din5008a.FontSize10)
+	d.pdfGen.SetFontGapY(din5008a.FontGab10)
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.OpeningText, "", "L")
 }
 
-func (d *DeliveryNode) printDeliveryTable(pdfGen *generator.PDFGenerator) {
+func (d *DeliveryNode) printDeliveryTable() {
 	var items = [][]string{{}}
 
 	for _, item := range d.data.DeliveryItems {
@@ -189,39 +182,42 @@ func (d *DeliveryNode) printDeliveryTable(pdfGen *generator.PDFGenerator) {
 				germanNumber(int(item.Quantity)) + " " + item.Unit,
 				item.Description,
 				"",
-			})
+			},
+		)
 	}
 
 	var headerCells = []string{"Pos", "Anzahl", "Beschreibung", "Notiz"}
 	var columnPercent = []float64{7, 18, 40, 35}
-	var columnWidth = getColumnWithFromPercentage(pdfGen, columnPercent)
+	var columnWidth = getColumnWithFromPercentage(d.pdfGen, columnPercent)
 	var headerCellAlign = []string{"LM", "LM", "LM", "LM"}
 	var bodyCellAlign = []string{"LM", "LM", "LM", "LM"}
 
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-	pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
-	pdfGen.PrintTableBody(items, columnWidth, bodyCellAlign)
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.SetFontSize(din5008a.FontSize10)
+	d.pdfGen.SetFontGapY(din5008a.FontGab10)
+	d.pdfGen.PrintTableHeader(headerCells, columnWidth, headerCellAlign)
+	d.pdfGen.PrintTableBody(items, columnWidth, bodyCellAlign)
 
 }
 
-func (d *DeliveryNode) printClosingText(pdfGen *generator.PDFGenerator) {
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.Agb, "", "L")
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.NewLine(d.meta.Margin.Left)
-	pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.ClosingText, "", "L")
+func (d *DeliveryNode) printClosingText() {
+	d.pdfGen.SetFontSize(din5008a.FontSize10)
+	d.pdfGen.SetFontGapY(din5008a.FontGab10)
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.Agb, "", "L")
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.PrintLnPdfText(d.data.DeliveryNodeTexts.ClosingText, "", "L")
 }
 
-func (d *DeliveryNode) printSignatureSection(pdfGen *generator.PDFGenerator) {
-	const startSignatureSectionOnPosY = 230
-
-	pageWidth, _ := d.pdfGen.GetPdf().GetPageSize()
-	var startSupplierX = d.meta.Margin.Left
-	var startCustomerX = pageWidth / 2.0
+func (d *DeliveryNode) printSignatureSection() {
+	const signatureHeight = 50
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	d.pdfGen.NewLine(din5008a.BodyStartX)
+	_, y := d.pdfGen.GetCursor()
+	var startSignatureSectionOnPosY = y //230
+	var startSupplierX = din5008a.BodyStartX
+	var startCustomerX = ((din5008a.BodyStopX - din5008a.BodyStartX) / 2) + din5008a.BodyStartX
 	var senderSignatureName string
 
 	if d.data.SenderAddress.CompanyName != "" {
@@ -230,72 +226,95 @@ func (d *DeliveryNode) printSignatureSection(pdfGen *generator.PDFGenerator) {
 		senderSignatureName = "Lieferant"
 	}
 
-	d.printSignaturePart(pdfGen, senderSignatureName, startSupplierX, startSignatureSectionOnPosY, d.defaultLineColor)
-	d.printSignaturePart(pdfGen, "Kunde", startCustomerX, startSignatureSectionOnPosY, d.defaultLineColor)
+	d.printSignaturePart(senderSignatureName, startSupplierX, startSignatureSectionOnPosY)
+	d.printSignaturePart("Kunde", startCustomerX, startSignatureSectionOnPosY)
 
 }
 
-func (d *DeliveryNode) printSignaturePart(pdfGen *generator.PDFGenerator, headText string, startX float64, startY float64, lineColor generator.Color) {
-	const nameLength = 60
-	const dateLength = 20
+func (d *DeliveryNode) printSignaturePart(headText string, startX float64, startY float64) {
+	const contentWidth = (din5008a.BodyStopX - din5008a.BodyStartX) / 2
+	const marginLeft = 22.5
+	const nameLength = contentWidth - marginLeft
+	const dateLength = nameLength / 3
 	const gabLength = 5
-	const signatureLength = 35
+	const signatureLength = (nameLength/3)*2 - gabLength
 
 	var cY float64
 
-	pdfGen.SetCursor(startX, startY)
-	pdfGen.DrawLine(startX, startY, startX+nameLength, startY, lineColor, 0)
-	_, cY = pdfGen.GetCursor()
-	pdfGen.SetCursor(startX, cY+1)
-	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
-	pdfGen.PrintPdfText(headText, "b", "L")
-	pdfGen.PrintPdfText("(Name)", "", "L")
-	pdfGen.NewLine(startX)
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
+	// name
+	d.pdfGen.SetCursor(startX, startY)
+	d.pdfGen.DrawLine(startX, startY, startX+nameLength, startY)
+	_, cY = d.pdfGen.GetCursor()
+	d.pdfGen.SetCursor(startX, cY+1)
+	d.pdfGen.SetFontSize(d.meta.Font.SizeSmall)
+	d.pdfGen.PrintPdfText(headText, "b", "L")
+	d.pdfGen.PrintLnPdfText("(Name)", "", "L")
 
-	pdfGen.NewLine(startX)
-	pdfGen.NewLine(startX)
-	pdfGen.NewLine(startX)
+	d.pdfGen.SetFontSize(d.meta.Font.SizeDefault)
+	d.pdfGen.NewLine(startX)
+	d.pdfGen.NewLine(startX)
+	d.pdfGen.NewLine(startX)
 
-	_, cY = pdfGen.GetCursor()
+	//date & signature
+	_, cY = d.pdfGen.GetCursor()
 	var dateEndX = startX + dateLength
 	var signatureStartX = startX + dateLength + gabLength
 	var signatureEndX = startX + dateLength + gabLength + signatureLength
-	pdfGen.DrawLine(startX, cY, dateEndX, cY, lineColor, 0)
-	pdfGen.DrawLine(signatureStartX, cY, signatureEndX, cY, lineColor, 0)
-	_, cY = pdfGen.GetCursor()
-	pdfGen.SetCursor(startX, cY+1)
-	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
-	pdfGen.PrintPdfText("Datum", "", "L")
-	_, cY = pdfGen.GetCursor()
-	pdfGen.SetCursor(signatureStartX, cY)
-	pdfGen.PrintPdfText("Unterschrift", "", "L")
+	d.pdfGen.DrawLine(startX, cY, dateEndX, cY)
+	d.pdfGen.DrawLine(signatureStartX, cY, signatureEndX, cY)
+	_, cY = d.pdfGen.GetCursor()
+	d.pdfGen.SetCursor(startX, cY+1)
+	d.pdfGen.SetFontSize(d.meta.Font.SizeSmall)
+	d.pdfGen.PrintPdfText("Datum", "", "L")
+	_, cY = d.pdfGen.GetCursor()
+	d.pdfGen.SetCursor(signatureStartX, cY)
+	d.pdfGen.PrintPdfText("Unterschrift", "", "L")
+	d.pdfGen.SetFontSize(din5008a.FontGab10)
 }
 
-func (d *DeliveryNode) printFooter(pdfGen *generator.PDFGenerator) {
-	const startAtY = 273
-	const startPageNumberY = 282
-	const gabY = 3
+func (d *DeliveryNode) printFooter() {
+	footerStartY, err := din5008a.Footer(d.printFooterContent, d.pdfGen)
 
-	pageWidth, _ := pdfGen.GetPdf().GetPageSize()
+	if err != nil {
+		d.pdfGen.SetError(err)
+	}
 
-	pdfGen.SetFontSize(d.meta.Font.SizeSmall)
-	pdfGen.DrawLine(d.meta.Margin.Left, startAtY, pageWidth-d.meta.Margin.Right, startAtY, d.defaultLineColor, 0)
+	if d.footerStartY == 0 {
+		d.footerStartY = footerStartY
+	}
+}
 
-	pdfGen.SetCursor(d.meta.Margin.Left, startAtY+gabY)
-	//pdfGen.PrintLnPdfText("Web", "", "L")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Web, "", "L")
+func (d *DeliveryNode) printFooterContent(maxFooterHeight float64) (footerStartY float64) {
+	// calculate height
+	var currentStartX float64
+	var currentY float64
+	d.pdfGen.SetUnsafeCursor(din5008a.BodyStartX, maxFooterHeight)
+	d.pdfGen.PreviousLine(din5008a.BodyStartX)
+	d.pdfGen.PreviousLine(din5008a.BodyStartX)
+	d.pdfGen.PreviousLine(din5008a.BodyStartX)
+	_, currentY = d.pdfGen.GetCursor()
+	footerStartY = currentY
 
-	pdfGen.SetCursor(pageWidth/2, startAtY+gabY)
-	//pdfGen.PrintLnPdfText("Tel", "", "C")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Phone, "", "C")
+	currentStartX = din5008a.BodyStartX
+	d.pdfGen.SetCursor(currentStartX, footerStartY)
+	d.pdfGen.NewLine(currentStartX)
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Web, "", "L")
 
-	pdfGen.SetCursor(pageWidth-d.meta.Margin.Right, startAtY+gabY)
-	//pdfGen.PrintLnPdfText("E-Mail", "", "R")
-	pdfGen.PrintPdfText(d.data.SenderInfo.Email, "", "R")
+	currentStartX = ((din5008a.BodyStopX - din5008a.BodyStartX) / 2) + din5008a.BodyStartX
+	d.pdfGen.SetCursor(currentStartX, footerStartY)
+	d.pdfGen.NewLine(currentStartX)
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Phone, "", "C")
 
-	pdfGen.DrawLine(d.meta.Margin.Left, startPageNumberY, pageWidth-d.meta.Margin.Right, startPageNumberY, d.defaultLineColor, 0)
-	pdfGen.SetCursor(pageWidth/2, startPageNumberY+gabY)
-	pdfGen.PrintLnPdfText("Seite 1 von 1", "", "C")
-	pdfGen.SetFontSize(d.meta.Font.SizeDefault)
+	currentStartX = din5008a.BodyStopX
+	d.pdfGen.SetCursor(currentStartX, footerStartY)
+	d.pdfGen.NewLine(currentStartX)
+	d.pdfGen.PrintPdfText(d.data.SenderInfo.Email, "", "R")
+
+	return footerStartY
+}
+
+func (d *DeliveryNode) printHeader() {
+	if d.data.SenderInfo.MimeLogoUrl != "" {
+		din5008a.MimeImageHeader(d.pdfGen, d.data.SenderInfo.MimeLogoUrl)
+	}
 }
