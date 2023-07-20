@@ -33,7 +33,7 @@ func NewTableAttachment(logger *zerolog.Logger) *TableAttachment {
 		logger:        logger,
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
 		pdfGen:        nil,
-		footerStartY:  din5008a.Height - 30,
+		footerStartY:  din5008a.Height - 5,
 	}
 }
 
@@ -65,16 +65,16 @@ func (t *TableAttachment) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	pdfGen, err := generator.NewPDFGenerator(
 		generator.MetaData{
-			FontName:         "",
-			FontGapY:         0,
-			FontSize:         0,
-			MarginLeft:       0,
-			MarginTop:        0,
-			MarginRight:      0,
+			FontName:         "OpenSans",
+			FontGapY:         1.3,
+			FontSize:         din5008a.FontSize10,
+			MarginLeft:       din5008a.BodyStartX,
+			MarginTop:        din5008a.AddressSenderTextStartY,
+			MarginRight:      din5008a.Width - din5008a.BodyStopX,
 			MarginBottom:     0,
-			Unit:             "",
-			DefaultLineWidth: 0,
-			DefaultLineColor: generator.Color{},
+			Unit:             "mm",
+			DefaultLineWidth: 0.4,
+			DefaultLineColor: generator.Color{R: 162, G: 162, B: 162},
 		},
 		false,
 		t.logger,
@@ -95,8 +95,7 @@ func (t *TableAttachment) GeneratePDF() (*gofpdf.Fpdf, error) {
 
 	t.doGenerate()
 
-	//TODO implement me
-	panic("implement me")
+	return t.pdfGen.GetPdf(), t.pdfGen.GetError()
 }
 
 func (t *TableAttachment) LogError(err error) {
@@ -124,7 +123,7 @@ func (t *TableAttachment) doGenerate() {
 		t.printTable()
 	})
 
-	din5008a.PageNumbering(t.pdfGen, t.footerStartY)
+	din5008a.PageNumberingCustom("Anhang", t.pdfGen, t.footerStartY, false)
 }
 
 func (t *TableAttachment) printHeadline() {
@@ -132,7 +131,7 @@ func (t *TableAttachment) printHeadline() {
 	x, y := t.pdfGen.GetCursor()
 
 	//todo is this DIN conform or how to design the second page???
-	y = din5008a.HeaderStopY + 30
+	y = din5008a.HeaderStopY + 5
 	t.pdfGen.SetCursor(x, y)
 	t.pdfGen.PrintLnPdfText("Anhang", "b", "L")
 	t.pdfGen.SetFontSize(din5008a.FontSize10)
@@ -165,7 +164,7 @@ func (t *TableAttachment) printTable() {
 	var columnWidth = getColumnWithFromPercentage(t.pdfGen, t.data.ColumnPercentages)
 	var cellAlign []string
 
-	for i := 0; i < len(t.data.TableData); i++ {
+	for i := 0; i <= len(t.data.TableData); i++ {
 		cellAlign = append(cellAlign, "LM")
 	}
 
