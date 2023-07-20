@@ -16,55 +16,24 @@ import (
 var logger zerolog.Logger
 
 func invoiceRequest(w http.ResponseWriter, r *http.Request) {
-	handler := pdfType.NewInvoice(&logger)
-
-	err := handler.SetDataFromRequest(r)
-	if err != nil {
-		logError(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	pdf, err := handler.GeneratePDF()
-	if err != nil {
-		logError(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = pdf.Output(w)
-	if err != nil {
-		logError(err)
-	}
+	h := pdfType.NewInvoice(&logger)
+	executeHandler(h, w, r)
 }
 
 func deliveryNodeRequest(w http.ResponseWriter, r *http.Request) {
-	handler := pdfType.NewDeliveryNode(&logger)
+	h := pdfType.NewDeliveryNode(&logger)
+	executeHandler(h, w, r)
+}
 
-	err := handler.SetDataFromRequest(r)
-	if err != nil {
-		logError(err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	pdf, err := handler.GeneratePDF()
-	if err != nil {
-		logError(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = pdf.Output(w)
-	if err != nil {
-		logError(err)
-	}
+func attachmentTableRequest(w http.ResponseWriter, r *http.Request) {
+	h := pdfType.NewTableAttachment(&logger)
+	executeHandler(h, w, r)
 }
 
 func handleRequests() {
 	http.HandleFunc("/invoice", invoiceRequest)
 	http.HandleFunc("/delivery-node", deliveryNodeRequest)
-	http.HandleFunc("/attachment/table", deliveryNodeRequest)
+	http.HandleFunc("/attachment/table", attachmentTableRequest)
 	logger.Debug().Msg("start server on localhost:10000")
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
@@ -85,7 +54,27 @@ func main() {
 	}
 
 	handleRequests()
+}
 
+func executeHandler(handler pdfType.PdfType, w http.ResponseWriter, r *http.Request) {
+	err := handler.SetDataFromRequest(r)
+	if err != nil {
+		logError(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	pdf, err := handler.GeneratePDF()
+	if err != nil {
+		logError(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = pdf.Output(w)
+	if err != nil {
+		logError(err)
+	}
 }
 
 func openBrowser(url string) {
