@@ -1,0 +1,25 @@
+{
+  "timeInfo": "Von 1.1 bis 11.11.",
+  "tableHeader": [
+    "Hello",
+    "Table",
+    "Header"
+  ],
+  "tableData": [
+    [
+      "Hello",
+      "Table",
+      "Body"
+    ],
+    [
+      "Knock",
+      "Knock",
+      "Who is there?"
+    ]
+  ],
+  "columnPercentages": [
+    25,
+    25,
+    50
+  ]
+}
