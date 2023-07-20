@@ -54,12 +54,6 @@ func NewInvoice(logger *zerolog.Logger) *Invoice {
 	return &Invoice{
 		data: invoiceRequestData{},
 		meta: PdfMeta{
-			Margin: pdfMargin{
-				Left:   25,
-				Right:  20,
-				Top:    din5008a.AddressSenderTextStartY,
-				Bottom: 0,
-			},
 			Font: pdfFont{
 				FontName:    "openSans",
 				SizeDefault: din5008a.FontSize10,
@@ -119,10 +113,10 @@ func (i *Invoice) GeneratePDF() (*gofpdf.Fpdf, error) {
 			FontName:         "OpenSans",
 			FontGapY:         1.3,
 			FontSize:         i.meta.Font.SizeDefault,
-			MarginLeft:       i.meta.Margin.Left,
-			MarginTop:        i.meta.Margin.Top,
-			MarginRight:      i.meta.Margin.Right,
-			MarginBottom:     i.meta.Margin.Bottom,
+			MarginLeft:       din5008a.BodyStartX,
+			MarginTop:        din5008a.AddressSenderTextStartY,
+			MarginRight:      din5008a.Width - din5008a.BodyStopX,
+			MarginBottom:     0,
 			Unit:             "mm",
 			DefaultLineWidth: 0.4,
 			DefaultLineColor: generator.Color{R: 162, G: 162, B: 162},
@@ -247,7 +241,7 @@ func (i *Invoice) printInvoiceTable() {
 	var summaryColumnWidths = getColumnWithFromPercentage(i.pdfGen, summaryColumnPercent)
 	var summaryCellAlign = []string{"LM", "LM", "RM"}
 
-	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.SetFontSize(i.meta.Font.SizeSmall)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.ServiceTimeText, "i", "L")
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
@@ -259,12 +253,12 @@ func (i *Invoice) printInvoiceTable() {
 
 func (i *Invoice) printClosingText() {
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
-	i.pdfGen.NewLine(i.meta.Margin.Left)
-	i.pdfGen.NewLine(i.meta.Margin.Left)
-	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.ClosingText, "", "L")
-	i.pdfGen.NewLine(i.meta.Margin.Left)
-	i.pdfGen.NewLine(i.meta.Margin.Left)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
+	i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
 }
 

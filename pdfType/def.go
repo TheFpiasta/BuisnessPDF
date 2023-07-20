@@ -14,8 +14,7 @@ type PdfType interface {
 }
 
 type PdfMeta struct {
-	Margin pdfMargin
-	Font   pdfFont
+	Font pdfFont
 }
 
 type pdfFont struct {

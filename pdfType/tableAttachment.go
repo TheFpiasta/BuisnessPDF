@@ -4,6 +4,7 @@ import (
 	"SimpleInvoice/generator"
 	din5008a "SimpleInvoice/norms/letter/din-5008-a"
 	"encoding/json"
+	"errors"
 	errorsWithStack "github.com/go-errors/errors"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/rs/zerolog"
@@ -16,9 +17,11 @@ type TableAttachment struct {
 	logger        *zerolog.Logger
 	printErrStack bool
 	pdfGen        *generator.PDFGenerator
+	footerStartY  float64
 }
 
 type tableAttachmentRequestData struct {
+	TimeInfo          string     `json:"timeInfo"`
 	TableHeader       []string   `json:"tableHeader"`
 	TableData         [][]string `json:"tableData"`
 	ColumnPercentages []float64  `json:"columnPercentages"`
@@ -29,6 +32,8 @@ func NewTableAttachment(logger *zerolog.Logger) *TableAttachment {
 		data:          tableAttachmentRequestData{},
 		logger:        logger,
 		printErrStack: logger.GetLevel() <= zerolog.DebugLevel,
+		pdfGen:        nil,
+		footerStartY:  din5008a.Height - 30,
 	}
 }
 
@@ -114,10 +119,56 @@ func (t *TableAttachment) validateData() (err error) {
 func (t *TableAttachment) doGenerate() {
 
 	din5008a.Body(t.pdfGen, func() {
-		//TODO implement print info text
-		//TODO implement print header
-		//TODO implement print table
+		t.printHeadline()
+		t.printTimeInfo()
+		t.printTable()
 	})
 
-	din5008a.PageNumbering(t.pdfGen, din5008a.Height-30)
+	din5008a.PageNumbering(t.pdfGen, t.footerStartY)
+}
+
+func (t *TableAttachment) printHeadline() {
+	t.pdfGen.SetFontSize(din5008a.FontSize10 + 5)
+	x, y := t.pdfGen.GetCursor()
+
+	//todo is this DIN conform or how to design the second page???
+	y = din5008a.HeaderStopY + 30
+	t.pdfGen.SetCursor(x, y)
+	t.pdfGen.PrintLnPdfText("Anhang", "b", "L")
+	t.pdfGen.SetFontSize(din5008a.FontSize10)
+	t.pdfGen.NewLine(din5008a.BodyStartX)
+}
+
+func (t *TableAttachment) printTimeInfo() {
+	t.pdfGen.NewLine(din5008a.BodyStartX)
+	t.pdfGen.SetFontSize(din5008a.FontSizeSender8)
+	t.pdfGen.PrintLnPdfText(t.data.TimeInfo, "i", "L")
+	t.pdfGen.SetFontSize(din5008a.FontSize10)
+}
+
+func (t *TableAttachment) printTable() {
+	// check, if ColumnPercentages is nearly 100%
+	// small inaccuracy is allowed
+	// todo delete this and add it to request data validation
+	// todo rewrite to correct 100% validation
+	// ---
+	var pFull float64
+	for _, percentage := range t.data.ColumnPercentages {
+		pFull += percentage
+	}
+	if pFull < 99.9 || pFull > 100.1 {
+		t.LogError(errors.New("sum of ColumnPercentages out of range"))
+		return
+	}
+	// ---
+
+	var columnWidth = getColumnWithFromPercentage(t.pdfGen, t.data.ColumnPercentages)
+	var cellAlign []string
+
+	for i := 0; i < len(t.data.TableData); i++ {
+		cellAlign = append(cellAlign, "LM")
+	}
+
+	t.pdfGen.PrintTableHeader(t.data.TableHeader, columnWidth, cellAlign)
+	t.pdfGen.PrintTableBody(t.data.TableData, columnWidth, cellAlign)
 }
