@@ -64,6 +64,7 @@ func deliveryNodeRequest(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	http.HandleFunc("/invoice", invoiceRequest)
 	http.HandleFunc("/delivery-node", deliveryNodeRequest)
+	http.HandleFunc("/attachment/table", deliveryNodeRequest)
 	logger.Debug().Msg("start server on localhost:10000")
 	log.Fatal(http.ListenAndServe(":10000", nil))
 }
