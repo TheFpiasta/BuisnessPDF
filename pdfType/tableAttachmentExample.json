@@ -1,5 +1,6 @@
 {
-  "timeInfo": "Von 1.1 bis 11.11.",
+  "headline": "Anhang",
+  "tableInfo": "Von 1.1 bis 11.11.",
   "tableHeader": [
     "Hello",
     "Table",
@@ -21,5 +22,6 @@
     25,
     25,
     50
-  ]
+  ],
+  "pageNumberPrefix": "Anhang"
 }

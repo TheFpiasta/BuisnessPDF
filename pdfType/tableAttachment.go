@@ -21,10 +21,12 @@ type TableAttachment struct {
 }
 
 type tableAttachmentRequestData struct {
-	TimeInfo          string     `json:"timeInfo"`
+	Headline          string     `json:"headline"`
+	TableInfo         string     `json:"tableInfo"`
 	TableHeader       []string   `json:"tableHeader"`
 	TableData         [][]string `json:"tableData"`
 	ColumnPercentages []float64  `json:"columnPercentages"`
+	PageNumberPrefix  string     `json:"pageNumberPrefix"`
 }
 
 func NewTableAttachment(logger *zerolog.Logger) *TableAttachment {
@@ -123,7 +125,7 @@ func (t *TableAttachment) doGenerate() {
 		t.printTable()
 	})
 
-	din5008a.PageNumberingCustom("Anhang", t.pdfGen, t.footerStartY, false)
+	din5008a.PageNumberingCustom(t.data.PageNumberPrefix, t.pdfGen, t.footerStartY, false)
 }
 
 func (t *TableAttachment) printHeadline() {
@@ -133,7 +135,7 @@ func (t *TableAttachment) printHeadline() {
 	//todo is this DIN conform or how to design the second page???
 	y = din5008a.HeaderStopY + 5
 	t.pdfGen.SetCursor(x, y)
-	t.pdfGen.PrintLnPdfText("Anhang", "b", "L")
+	t.pdfGen.PrintLnPdfText(t.data.Headline, "b", "L")
 	t.pdfGen.SetFontSize(din5008a.FontSize10)
 	t.pdfGen.NewLine(din5008a.BodyStartX)
 }
@@ -141,7 +143,7 @@ func (t *TableAttachment) printHeadline() {
 func (t *TableAttachment) printTimeInfo() {
 	t.pdfGen.NewLine(din5008a.BodyStartX)
 	t.pdfGen.SetFontSize(din5008a.FontSizeSender8)
-	t.pdfGen.PrintLnPdfText(t.data.TimeInfo, "i", "L")
+	t.pdfGen.PrintLnPdfText(t.data.TableInfo, "i", "L")
 	t.pdfGen.SetFontSize(din5008a.FontSize10)
 }
 

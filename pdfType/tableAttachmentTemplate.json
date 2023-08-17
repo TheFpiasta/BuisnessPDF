@@ -1,8 +1,10 @@
 {
-  "timeInfo": "",
-  "tableHeader": [],
-  "tableData": [
-    []
-  ],
-  "columnPercentages": []
+    "headline": "",
+    "tableInfo": "",
+    "tableHeader": [],
+    "tableData": [
+        []
+    ],
+    "columnPercentages": [],
+    "pageNumberPrefix": ""
 }
