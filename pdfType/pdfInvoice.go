@@ -27,10 +27,10 @@ type invoiceRequestData struct {
 	ReceiverAddress din5008a.FullAdresse `json:"receiverAddress"`
 	SenderInfo      SenderInfo           `json:"senderInfo"`
 	InvoiceMeta     struct {
-		InvoiceNumber  string `json:"invoiceNumber"`
-		InvoiceDate    string `json:"invoiceDate"`
-		CustomerNumber string `json:"customerNumber"`
-		ProjectNumber  string `json:"projectNumber"`
+		InvoiceNumber  string            `json:"invoiceNumber"`
+		InvoiceDate    string            `json:"invoiceDate"`
+		CustomerNumber string            `json:"customerNumber"`
+		CustomMetaData []CustomMetaDatum `json:"customMetaData"`
 	} `json:"invoiceMeta"`
 	InvoiceBody struct {
 		OpeningText     string `json:"openingText"`
@@ -48,6 +48,11 @@ type invoiceRequestData struct {
 			TaxRate        int     `json:"taxRate"`
 		} `json:"invoicedItems"`
 	} `json:"invoiceBody"`
+}
+
+type CustomMetaDatum struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 func NewInvoice(logger *zerolog.Logger) *Invoice {
@@ -148,7 +153,10 @@ func (i *Invoice) doGeneratePdf() {
 	infoData = append(infoData, din5008a.InfoData{Name: "Kundennummer:", Value: i.data.InvoiceMeta.CustomerNumber})
 	infoData = append(infoData, din5008a.InfoData{Name: "Rechnungsnummer:", Value: i.data.InvoiceMeta.InvoiceNumber})
 	infoData = append(infoData, din5008a.InfoData{Name: "Datum:", Value: i.data.InvoiceMeta.InvoiceDate})
-	infoData = append(infoData, din5008a.InfoData{Name: "Projektnummer:", Value: i.data.InvoiceMeta.ProjectNumber})
+	//TODO check length and throw error, if over din norm
+	for _, datum := range i.data.InvoiceMeta.CustomMetaData {
+		infoData = append(infoData, din5008a.InfoData{Name: datum.Name, Value: datum.Value})
+	}
 
 	din5008a.FullAddressesAndInfoPart(i.pdfGen, i.data.SenderAddress, i.data.ReceiverAddress, infoData)
 
