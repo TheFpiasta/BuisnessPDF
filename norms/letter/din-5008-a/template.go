@@ -187,7 +187,11 @@ func Footer(content func(maxFooterHeight float64) (footerStartY float64), pdfGen
 }
 
 func PageNumbering(pdfGen *generator.PDFGenerator, footerStartY float64) {
-	if pdfGen.GetTotalNumber() == 1 {
+	PageNumberingCustom("Seite", pdfGen, footerStartY, true)
+}
+
+func PageNumberingCustom(prefixText string, pdfGen *generator.PDFGenerator, footerStartY float64, ignoreFirstPage bool) {
+	if pdfGen.GetTotalNumber() == 1 && ignoreFirstPage {
 		// if pdf has only one page, no page number is required by DIN 5008 A
 		return
 	}
@@ -201,7 +205,7 @@ func PageNumbering(pdfGen *generator.PDFGenerator, footerStartY float64) {
 		pdfGen.GoToPage(i)
 		pdfGen.SetUnsafeCursor(BodyStopX, footerStartY-MarginPageNumberY)
 		pdfGen.PreviousLine(BodyStopX)
-		text := fmt.Sprintf("Seite %d von %d", i, pages)
+		text := fmt.Sprintf("%s %d von %d", prefixText, i, pages)
 		pdfGen.PrintPdfText(text, "", "R")
 	}
 

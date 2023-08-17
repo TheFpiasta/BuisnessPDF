@@ -43,7 +43,12 @@
         "invoiceNumber": "",
         "invoiceDate": "",
         "customerNumber": "",
-        "projectNumber": ""
+        "customMetaData": [
+            {
+                "name": "",
+                "value": ""
+            }
+        ]
     },
     "InvoiceBody": {
         "openingText": "",

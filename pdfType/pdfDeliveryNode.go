@@ -47,12 +47,6 @@ func NewDeliveryNode(logger *zerolog.Logger) *DeliveryNode {
 	return &DeliveryNode{
 		data: deliveryNodeRequestData{},
 		meta: PdfMeta{
-			Margin: pdfMargin{
-				Left:   25,
-				Right:  20,
-				Top:    din5008a.AddressSenderTextStartY,
-				Bottom: 0,
-			},
 			Font: pdfFont{
 				FontName:    "openSans",
 				SizeDefault: din5008a.FontSize10,
@@ -112,10 +106,10 @@ func (d *DeliveryNode) GeneratePDF() (*gofpdf.Fpdf, error) {
 			FontName:         "OpenSans",
 			FontGapY:         1.3,
 			FontSize:         d.meta.Font.SizeDefault,
-			MarginLeft:       d.meta.Margin.Left,
-			MarginTop:        d.meta.Margin.Top,
-			MarginRight:      d.meta.Margin.Right,
-			MarginBottom:     d.meta.Margin.Bottom,
+			MarginLeft:       din5008a.BodyStartX,
+			MarginTop:        din5008a.AddressSenderTextStartY,
+			MarginRight:      din5008a.Width - din5008a.BodyStopX,
+			MarginBottom:     0,
 			Unit:             "mm",
 			DefaultLineWidth: 0.4,
 			DefaultLineColor: generator.Color{R: 162, G: 162, B: 162},
