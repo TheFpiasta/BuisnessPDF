@@ -489,7 +489,7 @@ func (core *PDFGenerator) PrintTableHeader(cells []string, columnWidth []float64
 
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
-	newlineHeight := lineHeight + core.data.FontGapY*2
+	newlineHeight := lineHeight + core.data.FontGapY*1.5
 
 	for i, cell := range cells {
 		core.PrintPdfTextFormatted(cell, "b", columnAlignStrings[i], "TB", true, Color{R: 239, G: 239, B: 239}, newlineHeight, columnWidth[i])
@@ -530,7 +530,7 @@ func (core *PDFGenerator) PrintTableBody(cells [][]string, columnWidths []float6
 
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
-	newlineHeight := lineHeight + core.data.FontGapY*2
+	newlineHeight := lineHeight + core.data.FontGapY*1.5
 
 	for _, row := range cells {
 		var extractedLines [][]string
@@ -622,7 +622,7 @@ func (core *PDFGenerator) PrintTableFooter(cells [][]string, columnWidths []floa
 
 	referenceX := core.pdf.GetX()
 	_, lineHeight := core.pdf.GetFontSize()
-	newlineHeight := lineHeight + core.data.FontGapY*2
+	newlineHeight := lineHeight + core.data.FontGapY*1.5
 
 	for i, row := range cells {
 		boarderStr := ""

@@ -263,10 +263,10 @@ func (i *Invoice) printClosingText() {
 	i.pdfGen.SetFontSize(i.meta.Font.SizeDefault)
 	i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.NewLine(din5008a.BodyStartX)
-	i.pdfGen.NewLine(din5008a.BodyStartX)
+	//i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.ClosingText, "", "L")
 	i.pdfGen.NewLine(din5008a.BodyStartX)
-	i.pdfGen.NewLine(din5008a.BodyStartX)
+	//i.pdfGen.NewLine(din5008a.BodyStartX)
 	i.pdfGen.PrintLnPdfText(i.data.InvoiceBody.UstNotice, "", "L")
 }
 
